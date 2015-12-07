@@ -8,6 +8,18 @@
 #include "enc28j60.h"
 
 void initialization(){
+
+    //bufferSize = size;
+    if (bitRead(SPCR, SPE) == 0)
+        initSPI();
+    selectPin = csPin;
+    pinMode(selectPin, OUTPUT);
+    disableChip();
+
+    writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
+    delay(2); // errata B7/2
+    while (!readOp(ENC28J60_READ_CTRL_REG, ESTAT) & ESTAT_CLKRDY);
+
     //Initialization
     //MAC Initialization
     writeRegByte(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS); //enabling receiving frames and flow control
@@ -30,6 +42,10 @@ void initialization(){
 
     //PHY Initialization
     writePhy(PHCON2, PHCON2_HDLDIS); //Half-Duplex Automatic Loopback Disable
+
+    SetBank(ECON1); //?
+    writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
+    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 
     writeReg(ETXST, TXSTART_INIT); //Transmit buffer start
     writeReg(ETXND, TXSTOP_INIT); //Transmit buffer end
