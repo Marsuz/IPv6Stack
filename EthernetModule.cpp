@@ -62,15 +62,17 @@ void initialization(){
 void sendPackage(){
     uint16_t len;
 
+//TODO Buffer needed
 
-
-    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
-    writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST);
-    writeOp(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF|EIR_TXIF);
+    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST); //Transmit Logic is held in Reset
+    writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST); //normal operation
+    writeOp(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF|EIR_TXIF); //Interrupt - No transmit error nor transmit interrupt pending
 
     writeReg(EWRPT, TXSTART_INIT);
     writeReg(ETXND, TXSTART_INIT+len);
     writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
     writeBuf(len, buffer);
+
+    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS); //Transmit Request to Send
 
 }
