@@ -9,7 +9,7 @@ static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
 byte ENC28J60::buffer[500]; // tcp/ip send and receive buffer
 
 void setup() {
-    if(initialize(sizeof ENC28J60::buffer, mymac, 8) == 0) {
+    if(ENC28J60::customInitialize(sizeof ENC28J60::buffer, mymac) == 0) {
         Serial.print("initialization failed");
     } else {
         Serial.print("else");
@@ -17,6 +17,6 @@ void setup() {
 }
 
 void loop() {
-    customSend();
+    ENC28J60::customSend();
 }
 

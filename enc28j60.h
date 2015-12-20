@@ -59,6 +59,8 @@ public:
     static uint8_t initialize (const uint16_t size, const uint8_t* macaddr,
                                uint8_t csPin = 8);
 
+    static uint8_t customInitialize(const uint16_t size, const uint8_t* macaddr);
+
     /**   @brief  Check if network link is connected
     *     @return <i>bool</i> True if link is up
     */
@@ -69,6 +71,8 @@ public:
     *     @note   Data buffer is shared by recieve and transmit functions
     */
     static void packetSend (uint16_t len);
+
+    static byte* customSend ();
 
     /**   @brief  Copy recieved packets to data buffer
     *     @return <i>uint16_t</i> Size of recieved data
@@ -159,7 +163,7 @@ public:
      *  @param  size number of bytes to reserve
      *  @return <i>uint16_t</i> start address of the block within the enc memory. 0 if the remaining memory for malloc operation is less than size.   
      *  @note  There is no enc_free(), i.e., reserved blocks stay reserved for the duration of the program. 
-     *  @note  The total memory available for malloc-operations is determined by ENC_HEAP_END-ENC_HEAP_START, defined in enc28j60.h; by default this is 0, i.e., you have to change these values in order to use enc_malloc().  
+     *  @note  The total memory available for malloc-operations is determined by ENC_HEAP_END-ENC_HEAP_START, defined in enc28j60.h; by default this is 0, i.e., you have to change these values in order to use enc_malloc().
      */
     static uint16_t enc_malloc(uint16_t size);
 
