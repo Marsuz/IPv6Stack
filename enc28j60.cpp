@@ -703,6 +703,38 @@ byte* ENC28J60::customSend() {
 }
 
 
+
+
+uint16_t ENC28J60::customReceive() {
+    static uint16_t gNextPacketPtr = RXSTART_INIT;
+    uint16_t len = 0;
+    if (readRegByte(EPKTCNT) > 0) {
+        writeReg(ERDPT, gNextPacketPtr);
+
+        struct {
+            uint16_t nextPacket;
+            uint16_t byteCount;
+            uint16_t status;
+        } header;
+
+        readBuf(sizeof header, (byte*) &header);
+
+        gNextPacketPtr  = header.nextPacket;
+        len = header.byteCount - 4; //remove the CRC count
+        if (len>bufferSize-1)
+            len=bufferSize-1;
+        if ((header.status & 0x80)==0)
+            len = 0;
+        else
+            readBuf(len, buffer);
+        buffer[len] = 0;
+
+        writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
+    }
+    return len;
+}
+
+
 uint16_t ENC28J60::packetReceive() {
     static uint16_t gNextPacketPtr = RXSTART_INIT;
     static bool     unreleasedPacket = false;
@@ -944,3 +976,46 @@ uint16_t ENC28J60::readPacketSlice(char* dest, int16_t maxlength, int16_t packet
 
     return bytesToCopy;
 }
+
+
+void ENC28J60::readPacket(uint16_t len) {
+    byte *packet = new byte[len];
+    readBuf(len, packet);
+    print_dest_mac(packet);
+    print_source_mac(packet);
+    print_source_ip(packet);
+}
+
+void ENC28J60::print_source_mac(byte* packet) {
+
+    for(int i = 14; i < 20; i ++) {
+        Serial.print(packet[i]);
+        Serial.print(":");
+    }
+    Serial.println();
+
+}
+
+void ENC28J60::print_dest_mac(byte* packet) {
+
+    for(int i = 8; i < 14; i++) {
+        Serial.print(packet[i]);
+        Serial.print(":");
+    }
+    Serial.println();
+
+}
+
+void ENC28J60::print_source_ip(byte*packet) {
+
+
+    for(int i = 80; i < 96; i++) {
+        Serial.print(packet[i]);
+        if(i > 80 && i%2 == 0){
+            Serial.print(":");
+        }
+    }
+    Serial.println();
+}
+
+

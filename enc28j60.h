@@ -80,6 +80,9 @@ public:
     */
     static uint16_t packetReceive ();
 
+    static uint16_t customReceive();
+
+    static void readPacket(uint16_t len);
     /**   @brief  Copy data from ENC28J60 memory
     *     @param  page Data page of memory
     *     @param  data Pointer to buffer to copy data to
@@ -186,6 +189,13 @@ public:
         @param num number of bytes to copy
      */
     static void memcpy_from_enc(void* dest, uint16_t source, int16_t num);
+
+
+    static void print_source_mac(byte* packet);
+
+    static void print_dest_mac(byte* packet);
+
+    static void print_source_ip(byte*packet);
 };
 
 typedef ENC28J60 Ethernet; //!< Define alias Ethernet for ENC28J60
