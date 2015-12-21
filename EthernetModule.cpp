@@ -155,3 +155,42 @@ void ENC28J60::customSend() {
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS); //Transmit Request to Send
     return tmp;
 }
+
+byte* readPacket(uint16_t len) {
+    byte *packet = new byte[len];
+    readBuf(len, packet);
+    print_dest_mac(packet);
+    print_source_mac(packet);
+    print_source_ip(packet);
+}
+
+void print_source_mac(byte* packet) {
+
+    for(int i = 14; i < 20; i ++) {
+        Serial.print(packet[i]);
+    }
+    Serial.println();
+
+}
+
+void print_dest_mac(byte* packet) {
+
+    for(int i = 8; i < 14; i++) {
+        Serial.print(packet[i]);
+    }
+    Serial.println();
+
+}
+
+void print_source_ip(byte*packet) {
+
+    for(int i = 80; i < 176; i++) {
+        Serial.print(packet[i]);
+        if(i > 80 && i%16 == 0){
+            Serial.print(":");
+        }
+    }
+    Serial.println();
+}
+
+
