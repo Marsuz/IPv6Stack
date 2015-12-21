@@ -156,7 +156,7 @@ void ENC28J60::customSend() {
     return tmp;
 }
 
-byte* readPacket(uint16_t len) {
+void readPacket(uint16_t len) {
     byte *packet = new byte[len];
     readBuf(len, packet);
     print_dest_mac(packet);
@@ -184,9 +184,9 @@ void print_dest_mac(byte* packet) {
 
 void print_source_ip(byte*packet) {
 
-    for(int i = 80; i < 176; i++) {
+    for(int i = 80; i < 96; i++) {
         Serial.print(packet[i]);
-        if(i > 80 && i%16 == 0){
+        if(i > 80 && i%2 == 0){
             Serial.print(":");
         }
     }
