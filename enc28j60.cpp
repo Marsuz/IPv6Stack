@@ -979,6 +979,7 @@ uint16_t ENC28J60::readPacketSlice(char* dest, int16_t maxlength, int16_t packet
 
 
 void ENC28J60::readPacket(uint16_t len) {
+    if(len == 0) return;
     byte *packet = new byte[len];
     readBuf(len, packet);
     print_dest_mac(packet);
@@ -989,8 +990,8 @@ void ENC28J60::readPacket(uint16_t len) {
 void ENC28J60::print_source_mac(byte* packet) {
 
     for(int i = 14; i < 20; i ++) {
-        Serial.print(packet[i]);
-        Serial.print(":");
+        Serial.print(packet[i], HEX);
+        if(i != 19) Serial.print(":");
     }
     Serial.println();
 
@@ -999,8 +1000,8 @@ void ENC28J60::print_source_mac(byte* packet) {
 void ENC28J60::print_dest_mac(byte* packet) {
 
     for(int i = 8; i < 14; i++) {
-        Serial.print(packet[i]);
-        Serial.print(":");
+        Serial.print(packet[i], HEX);
+        if(i != 13) Serial.print(":");
     }
     Serial.println();
 
@@ -1010,7 +1011,7 @@ void ENC28J60::print_source_ip(byte*packet) {
 
 
     for(int i = 80; i < 96; i++) {
-        Serial.print(packet[i]);
+        Serial.print(packet[i], HEX);
         if(i > 80 && i%2 == 0){
             Serial.print(":");
         }
