@@ -360,55 +360,6 @@ static void writePhy(byte address, uint16_t data) {
     while (readRegByte(MISTAT) & MISTAT_BUSY);
 }
 
-byte ENC28J60::initialize(uint16_t size, const byte *macaddr, byte csPin) {
-    bufferSize = size;
-    if (bitRead(SPCR, SPE) == 0)
-        initSPI();
-    selectPin = csPin;
-    pinMode(selectPin, OUTPUT);
-    disableChip();
-
-    writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
-    delay(2); // errata B7/2
-    while (!readOp(ENC28J60_READ_CTRL_REG, ESTAT) & ESTAT_CLKRDY);
-
-    writeReg(ERXST, RXSTART_INIT);
-    writeReg(ERXRDPT, RXSTART_INIT);
-    writeReg(ERXND, RXSTOP_INIT);
-    writeReg(ETXST, TXSTART_INIT);
-    writeReg(ETXND, TXSTOP_INIT);
-
-    writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_PMEN | ERXFCON_BCEN);
-    writeReg(EPMM0, 0x303f);
-    writeReg(EPMCS, 0xf7f9);
-    writeRegByte(MACON1, MACON1_MARXEN | MACON1_TXPAUS | MACON1_RXPAUS);
-    writeRegByte(MACON2, 0x00);
-    writeOp(ENC28J60_BIT_FIELD_SET, MACON3,
-            MACON3_PADCFG0 | MACON3_TXCRCEN | MACON3_FRMLNEN);
-    writeReg(MAIPG, 0x0C12);
-    writeRegByte(MABBIPG, 0x12);
-    writeReg(MAMXFL, MAX_FRAMELEN);
-    writeRegByte(MAADR5, macaddr[0]);
-    writeRegByte(MAADR4, macaddr[1]);
-    writeRegByte(MAADR3, macaddr[2]);
-    writeRegByte(MAADR2, macaddr[3]);
-    writeRegByte(MAADR1, macaddr[4]);
-    writeRegByte(MAADR0, macaddr[5]);
-    writePhy(PHCON2, PHCON2_HDLDIS);
-    SetBank(ECON1);
-    writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE | EIE_PKTIE);
-    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
-
-    byte rev = readRegByte(EREVID);
-    // microchip forgot to step the number on the silcon when they
-    // released the revision B7. 6 is now rev B7. We still have
-    // to see what they do when they release B8. At the moment
-    // there is no B8 out yet
-    if (rev > 5) ++rev;
-    return rev;
-}
-
-
 /*
 struct __attribute__((__packed__)) transmit_status_vector {
     uint16_t transmitByteCount;
@@ -443,81 +394,6 @@ struct transmit_status_vector {
 #else
 #define BREAKORCONTINUE break;
 #endif
-
-void ENC28J60::packetSend(uint16_t len) {
-    byte retry = 0;
-
-#if ETHERCARD_SEND_PIPELINING
-    goto resume_last_transmission;
-#endif
-    while (1) {
-        // latest errata sheet: DS80349C 
-        // always reset transmit logic (Errata Issue 12)
-        // the Microchip TCP/IP stack implementation used to first check
-        // whether TXERIF is set and only then reset the transmit logic
-        // but this has been changed in later versions; possibly they
-        // have a reason for this; they don't mention this in the errata 
-        // sheet
-        writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
-        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST);
-        writeOp(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF | EIR_TXIF);
-
-        // prepare new transmission 
-        if (retry == 0) {
-            writeReg(EWRPT, TXSTART_INIT);
-            writeReg(ETXND, TXSTART_INIT + len);
-            writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
-            writeBuf(len, buffer);
-        }
-
-        // initiate transmission
-        writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
-#if ETHERCARD_SEND_PIPELINING
-        if (retry == 0) return;
-#endif
-
-        resume_last_transmission:
-
-        // wait until transmission has finished; referrring to the data sheet and 
-        // to the errata (Errata Issue 13; Example 1) you only need to wait until either 
-        // TXIF or TXERIF gets set; however this leads to hangs; apparently Microchip
-        // realized this and in later implementations of their tcp/ip stack they introduced 
-        // a counter to avoid hangs; of course they didn't update the errata sheet 
-        uint16_t count = 0;
-        while ((readRegByte(EIR) & (EIR_TXIF | EIR_TXERIF)) == 0 && ++count < 1000U);
-
-        if (!(readRegByte(EIR) & EIR_TXERIF) && count < 1000U) {
-            // no error; start new transmission
-            BREAKORCONTINUE
-        }
-
-        // cancel previous transmission if stuck
-        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRTS);
-
-#if ETHERCARD_RETRY_LATECOLLISIONS == 0
-        BREAKORCONTINUE
-#endif
-
-        // Check whether the chip thinks that a late collision ocurred; the chip
-        // may be wrong (Errata Issue 13); therefore we retry. We could check
-        // LATECOL in the ESTAT register in order to find out whether the chip
-        // thinks a late collision ocurred but (Errata Issue 15) tells us that
-        // this is not working. Therefore we check TSV
-        transmit_status_vector tsv;
-        uint16_t etxnd = readReg(ETXND);
-        writeReg(ERDPT, etxnd + 1);
-        readBuf(sizeof(transmit_status_vector), (byte * ) & tsv);
-        // LATECOL is bit number 29 in TSV (starting from 0)
-
-        if (!((readRegByte(EIR) & EIR_TXERIF) && (tsv.bytes[3] & 1 << 5) /*tsv.transmitLateCollision*/) ||
-            retry > 16U) {
-            // there was some error but no LATECOL so we do not repeat
-            BREAKORCONTINUE
-        }
-
-        retry++;
-    }
-}
 
 
 uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
@@ -764,7 +640,6 @@ byte *ENC28J60::customSend(const byte *srcAddr, const byte *destAddr, const byte
     toSend[70] =  checksum >> 8;
     toSend[71] = checksum;
 
-    uint16_t len = 0x1b0;
 
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST); //Transmit Logic is held in Reset
     writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST); //normal operation
@@ -775,7 +650,6 @@ byte *ENC28J60::customSend(const byte *srcAddr, const byte *destAddr, const byte
     writeReg(ETXND, TXSTART_INIT + (sizeof toSend));
     writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
     writeBuf(sizeof toSend, toSend);
-
 
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS); //Transmit Request to Send
     return toSend;
@@ -811,6 +685,84 @@ uint16_t ENC28J60::customReceive() {
     }
     return len;
 }
+
+
+uint16_t ENC28J60::sendTCPSyn() {
+
+    static byte tmp[] = {
+            //ethernet and ipv6 frame
+            0x20, 0x89, 0x84, 0x1F, 0x61, 0x5D,
+            0x74, 0x69, 0x69, 0x2D, 0x30, 0x31,
+            0x86, 0xdd,
+            0x60,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x64,
+//            0x3b,
+            0x06,
+            0x40,
+            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54, 0xBE,
+            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54, 0xBD,
+            //end of ipv6 frame
+            0x00, 0x01, //source port
+            0x0B, 0xB8, //dest port
+            0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random 58-61 bytes
+            0x00, 0x00, 0x00, 0x00,//Acknowledgment, doesn't matter with SYN (right?)
+            0b01010000,
+            0b00000010,
+            0x00, 0xFF,
+            0x00, 0x00, //chekcsum
+            0x00, 0x00 //URG not set, so value here doesn't matter
+    };
+
+    tmp[70] =  0;
+    tmp[71] =  0;
+
+    static byte toSend[154];
+    for (int k = 0; k < 74; k++) {
+        toSend[k] = tmp[k];
+    }
+    for (int k = 0; k < 80; k++) {
+        toSend[k + 74] = 1;
+    }
+
+    uint16_t seqNum = calc_seqnum(toSend, 58, 61);
+
+    uint16_t checksum = calc_checksum(toSend, 22, (sizeof toSend) - 22);
+    toSend[70] =  checksum >> 8;
+    toSend[71] = checksum;
+
+    uint16_t len = 0x1b0;
+
+    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST); //Transmit Logic is held in Reset
+    writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST); //normal operation
+    writeOp(ENC28J60_BIT_FIELD_CLR, EIR,
+            EIR_TXERIF | EIR_TXIF); //Interrupt - No transmit error nor transmit interrupt pending
+
+    writeReg(EWRPT, TXSTART_INIT);
+    writeReg(ETXND, TXSTART_INIT + (sizeof toSend));
+    writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
+    writeBuf(sizeof toSend, toSend);
+
+    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS); //Transmit Request to Send
+
+
+}
+
+uint16_t ENC28J60::receiveTCPSyn() {
+
+}
+
+uint16_t ENC28J60::sendTCPAck() {
+
+}
+
+uint15_t ENC28J60::receiveTCPAck() {
+
+}
+
 
 
 uint16_t ENC28J60::packetReceive() {
@@ -855,7 +807,7 @@ uint16_t ENC28J60::packetReceive() {
 uint16_t ENC28J60::calc_checksum(const byte* gPB, uint8_t off, uint16_t len) {
     const uint8_t* ptr = gPB + off;
 
-    uint32_t sum = len - 26;
+    uint32_t sum = len - 26; //magic
     while(len >1) {
         sum += (uint16_t) (((uint32_t)*ptr<<8)|*(ptr+1));
         ptr+=2;
@@ -867,6 +819,10 @@ uint16_t ENC28J60::calc_checksum(const byte* gPB, uint8_t off, uint16_t len) {
         sum = (uint16_t) sum + (sum >> 16);
     return ~(uint16_t)sum;
 }
+
+uint32_t ENC28J60::calc_seqnum(const byte* gPB, int lbound, int ubound) {
+    uint
+};
 
 
 void ENC28J60::readPacket(uint16_t len) {

@@ -56,9 +56,6 @@ public:
     *     @param  csPin Arduino pin used for chip select (enable network interface SPI bus). Default = 8
     *     @return <i>uint8_t</i> ENC28J60 firmware version or zero on failure.
     */
-    static uint8_t initialize (const uint16_t size, const uint8_t* macaddr,
-                               uint8_t csPin = 8);
-
     static uint8_t customInitialize(const uint16_t size, const uint8_t* macaddr);
 
 
@@ -66,15 +63,12 @@ public:
     *     @param  len Size of data to send
     *     @note   Data buffer is shared by recieve and transmit functions
     */
-    static void packetSend (uint16_t len);
-
     static byte* customSend ();
 
     /**   @brief  Copy recieved packets to data buffer
     *     @return <i>uint16_t</i> Size of recieved data
     *     @note   Data buffer is shared by recieve and transmit functions
     */
-    static uint16_t packetReceive ();
 
     static uint16_t customReceive();
 
