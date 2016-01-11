@@ -522,53 +522,8 @@ void ENC28J60::packetSend(uint16_t len) {
 
 uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
 //
-//    //bufferSize = size;
-//    uint8_t csPin = 8;
-//    if (bitRead(SPCR, SPE) == 0)
-//        initSPI();
-//    selectPin = csPin;
-//    pinMode(selectPin, OUTPUT);
-//    disableChip();
-//
-//    writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
-//    delay(2); // errata B7/2
-//    while (!readOp(ENC28J60_READ_CTRL_REG, ESTAT) & ESTAT_CLKRDY);
-//
-//    //Initialization
-//    //MAC Initialization
-//    writeRegByte(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS); //enabling receiving frames and flow control
-//    writeRegByte(MACON2, 0x00);
-//    writeOp(ENC28J60_BIT_FIELD_SET, MACON3,
-//            MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN); //automatic padding, crc, frame length status reporting
-//    writeReg(MAMXFL, 1500); //Max frame length
-//
-//    writeReg(MAIPG, 0x0C12); //half-duplex
-//    writeRegByte(MABBIPG, 0x12); //half-duplex
-//
-//    static byte macaddr[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
-//
-//    writeRegByte(MAADR5, macaddr[0]); //setting MAC address
-//    writeRegByte(MAADR4, macaddr[1]);
-//    writeRegByte(MAADR3, macaddr[2]);
-//    writeRegByte(MAADR2, macaddr[3]);
-//    writeRegByte(MAADR1, macaddr[4]);
-//    writeRegByte(MAADR0, macaddr[5]);
-//
-//    //PHY Initialization
-//    writePhy(PHCON2, PHCON2_HDLDIS); //Half-Duplex Automatic Loopback Disable
-//
-//    SetBank(ECON1); //?
-//    writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
-//    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
-//
-//    writeReg(ETXST, TXSTART_INIT); //Transmit buffer start
-//    writeReg(ETXND, TXSTOP_INIT); //Transmit buffer end
-//    writeReg(ERXST, RXSTART_INIT); //Receive buffer start
-//    writeReg(ERXRDPT, RXSTART_INIT); //Buffer read pointer
-//    writeReg(ERXND, RXSTOP_INIT); //receive buffer End
-//    return 1;
-    byte csPin = 8;
     bufferSize = size;
+    byte csPin = 8;
     if (bitRead(SPCR, SPE) == 0)
         initSPI();
     selectPin = csPin;
@@ -578,32 +533,41 @@ uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
     writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
     delay(2); // errata B7/2
     while (!readOp(ENC28J60_READ_CTRL_REG, ESTAT) & ESTAT_CLKRDY);
+//
+    writeReg(ETXST, TXSTART_INIT); //Transmit buffer start
+    writeReg(ETXND, TXSTOP_INIT); //Transmit buffer end
+    writeReg(ERXST, RXSTART_INIT); //Receive buffer start
+    writeReg(ERXRDPT, RXSTART_INIT); //Buffer read pointer
+    writeReg(ERXND, RXSTOP_INIT); //receive buffer End
 
-    writeReg(ERXST, RXSTART_INIT);
-    writeReg(ERXRDPT, RXSTART_INIT);
-    writeReg(ERXND, RXSTOP_INIT);
-    writeReg(ETXST, TXSTART_INIT);
-    writeReg(ETXND, TXSTOP_INIT);
-
+//    //Initialization
+//    //MAC Initialization
     writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_PMEN | ERXFCON_BCEN);
     writeReg(EPMM0, 0x303f);
     writeReg(EPMCS, 0xf7f9);
-    writeRegByte(MACON1, MACON1_MARXEN | MACON1_TXPAUS | MACON1_RXPAUS);
+    writeRegByte(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS); //enabling receiving frames and flow control
     writeRegByte(MACON2, 0x00);
     writeOp(ENC28J60_BIT_FIELD_SET, MACON3,
-            MACON3_PADCFG0 | MACON3_TXCRCEN | MACON3_FRMLNEN);
-    writeReg(MAIPG, 0x0C12);
-    writeRegByte(MABBIPG, 0x12);
-    writeReg(MAMXFL, MAX_FRAMELEN);
-    writeRegByte(MAADR5, macaddr[0]);
+            MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN); //automatic padding, crc, frame length status reporting
+
+    writeReg(MAIPG, 0x0C12); //half-duplex
+    writeRegByte(MABBIPG, 0x12); //half-duplex
+
+//    static byte macaddr[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
+
+    writeReg(MAMXFL, MAX_FRAMELEN); //Max frame length
+    writeRegByte(MAADR5, macaddr[0]); //setting MAC address
     writeRegByte(MAADR4, macaddr[1]);
     writeRegByte(MAADR3, macaddr[2]);
     writeRegByte(MAADR2, macaddr[3]);
     writeRegByte(MAADR1, macaddr[4]);
     writeRegByte(MAADR0, macaddr[5]);
-    writePhy(PHCON2, PHCON2_HDLDIS);
-    SetBank(ECON1);
-    writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE | EIE_PKTIE);
+//
+    //PHY Initialization
+    writePhy(PHCON2, PHCON2_HDLDIS); //Half-Duplex Automatic Loopback Disable
+
+    SetBank(ECON1); //?
+    writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 
     byte rev = readRegByte(EREVID);
@@ -613,6 +577,56 @@ uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
     // there is no B8 out yet
     if (rev > 5) ++rev;
     return rev;
+
+//    return 1;
+//    byte csPin = 8;
+//    bufferSize = size;
+//    if (bitRead(SPCR, SPE) == 0)
+//        initSPI();
+//    selectPin = csPin;
+//    pinMode(selectPin, OUTPUT);
+//    disableChip();
+//
+//    writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
+//    delay(2); // errata B7/2
+//    while (!readOp(ENC28J60_READ_CTRL_REG, ESTAT) & ESTAT_CLKRDY);
+
+//    writeReg(ERXST, RXSTART_INIT);
+//    writeReg(ERXRDPT, RXSTART_INIT);
+//    writeReg(ERXND, RXSTOP_INIT);
+//    writeReg(ETXST, TXSTART_INIT);
+//    writeReg(ETXND, TXSTOP_INIT);
+
+//    writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_PMEN | ERXFCON_BCEN);
+//    writeReg(EPMM0, 0x303f);
+//    writeReg(EPMCS, 0xf7f9);
+//    writeRegByte(MACON1, MACON1_MARXEN | MACON1_TXPAUS | MACON1_RXPAUS);
+//    writeRegByte(MACON2, 0x00);
+//    writeOp(ENC28J60_BIT_FIELD_SET, MACON3,
+//            MACON3_PADCFG0 | MACON3_TXCRCEN | MACON3_FRMLNEN);
+//    writeReg(MAIPG, 0x0C12);
+//    writeRegByte(MABBIPG, 0x12);
+//    writeReg(MAMXFL, MAX_FRAMELEN);
+
+
+//    writeRegByte(MAADR5, macaddr[0]);
+//    writeRegByte(MAADR4, macaddr[1]);
+//    writeRegByte(MAADR3, macaddr[2]);
+//    writeRegByte(MAADR2, macaddr[3]);
+//    writeRegByte(MAADR1, macaddr[4]);
+//    writeRegByte(MAADR0, macaddr[5]);
+//    writePhy(PHCON2, PHCON2_HDLDIS);
+//    SetBank(ECON1);
+//    writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE | EIE_PKTIE);
+//    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
+
+//    byte rev = readRegByte(EREVID);
+//    // microchip forgot to step the number on the silcon when they
+//    // released the revision B7. 6 is now rev B7. We still have
+//    // to see what they do when they release B8. At the moment
+//    // there is no B8 out yet
+//    if (rev > 5) ++rev;
+//    return rev;
 }
 
 byte *ENC28J60::customSend() {

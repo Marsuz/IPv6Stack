@@ -48,6 +48,7 @@ void ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
 //    writeReg(ERXRDPT, RXSTART_INIT); //Buffer read pointer
 //    writeReg(ERXND, RXSTOP_INIT); //receive buffer End
 //    return 1;
+
     bufferSize = size;
     if (bitRead(SPCR, SPE) == 0)
         initSPI();
