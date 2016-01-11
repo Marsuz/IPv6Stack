@@ -683,7 +683,7 @@ byte *ENC28J60::customSend() {
             0x00, 0x01, //source port
             0x0B, 0xB8, //dest port
             0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
-            0x00, 0x00, 0x00, 0x02,//Acknowledgment, doesn't matter with SYN (right?)
+            0x00, 0x00, 0x00, 0x00,//Acknowledgment, doesn't matter with SYN (right?)
             0b01010000,
             0b00000010,
             0x00, 0xFF,
@@ -694,11 +694,8 @@ byte *ENC28J60::customSend() {
     tmp[70] =  0;
     tmp[71] =  0;
 
-    uint16_t checksum = fill_checksum(tmp, 22, (sizeof tmp) - 22);
-    tmp[70] =  checksum >> 8;
-    tmp[71] = checksum;
 
-    int j = 154;
+
     static byte toSend[154];
     for (int k = 0; k < 74; k++) {
         toSend[k] = tmp[k];
@@ -706,6 +703,10 @@ byte *ENC28J60::customSend() {
     for (int k = 0; k < 80; k++) {
         toSend[k + 74] = data[k];
     }
+
+    uint16_t checksum = calc_checksum(toSend, 22, (sizeof toSend) - 22);
+    toSend[70] =  checksum >> 8;
+    toSend[71] = checksum;
 
     uint16_t len = 0x1b0;
 
@@ -795,10 +796,10 @@ uint16_t ENC28J60::packetReceive() {
     }
     return len;
 }
-uint16_t ENC28J60::fill_checksum(const byte* gPB, uint8_t off, uint16_t len) {
+uint16_t ENC28J60::calc_checksum(const byte* gPB, uint8_t off, uint16_t len) {
     const uint8_t* ptr = gPB + off;
 
-    uint32_t sum = 0;
+    uint32_t sum = len - 26;
     while(len >1) {
         sum += (uint16_t) (((uint32_t)*ptr<<8)|*(ptr+1));
         ptr+=2;
@@ -808,7 +809,7 @@ uint16_t ENC28J60::fill_checksum(const byte* gPB, uint8_t off, uint16_t len) {
         sum += ((uint32_t)*ptr)<<8;
     while (sum>>16)
         sum = (uint16_t) sum + (sum >> 16);
-    return (uint16_t)sum;
+    return ~(uint16_t)sum;
 }
 
 

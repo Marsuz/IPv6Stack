@@ -78,7 +78,7 @@ public:
 
     static uint16_t customReceive();
 
-    static uint16_t fill_checksum(const byte* gPB, uint8_t off, uint16_t len);
+    static uint16_t calc_checksum(const byte* gPB, uint8_t off, uint16_t len);
 
     static void readPacket(uint16_t len);
 
