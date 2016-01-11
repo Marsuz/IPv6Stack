@@ -235,7 +235,7 @@ bool ENC28J60::promiscuous_enabled = false;
 static byte Enc28j60Bank;
 static byte selectPin;
 
-void ENC28J60::initSPI () {
+void ENC28J60::initSPI() {
     pinMode(SS, OUTPUT);
     digitalWrite(SS, HIGH);
     pinMode(MOSI, OUTPUT);
@@ -250,23 +250,22 @@ void ENC28J60::initSPI () {
     bitSet(SPSR, SPI2X);
 }
 
-static void enableChip () {
+static void enableChip() {
     cli();
     digitalWrite(selectPin, LOW);
 }
 
-static void disableChip () {
+static void disableChip() {
     digitalWrite(selectPin, HIGH);
     sei();
 }
 
-static void xferSPI (byte data) {
+static void xferSPI(byte data) {
     SPDR = data;
-    while (!(SPSR&(1<<SPIF)))
-        ;
+    while (!(SPSR & (1 << SPIF)));
 }
 
-static byte readOp (byte op, byte address) {
+static byte readOp(byte op, byte address) {
     enableChip();
     xferSPI(op | (address & ADDR_MASK));
     xferSPI(0x00);
@@ -277,71 +276,67 @@ static byte readOp (byte op, byte address) {
     return result;
 }
 
-static void writeOp (byte op, byte address, byte data) {
+static void writeOp(byte op, byte address, byte data) {
     enableChip();
     xferSPI(op | (address & ADDR_MASK));
     xferSPI(data);
     disableChip();
 }
 
-static void readBuf(uint16_t len, byte* data) {
+static void readBuf(uint16_t len, byte *data) {
     uint8_t nextbyte;
 
     enableChip();
-    if (len != 0) {    
+    if (len != 0) {
         xferSPI(ENC28J60_READ_BUF_MEM);
-          
-        SPDR = 0x00; 
+
+        SPDR = 0x00;
         while (--len) {
-            while (!(SPSR & (1<<SPIF)))
-                ;
+            while (!(SPSR & (1 << SPIF)));
             nextbyte = SPDR;
             SPDR = 0x00;
-            *data++ = nextbyte;     
+            *data++ = nextbyte;
         }
-        while (!(SPSR & (1<<SPIF)))
-            ;
-        *data++ = SPDR;    
-    }
-    disableChip(); 
-}
-
-static void writeBuf(uint16_t len, const byte* data) {
-    enableChip();
-    if (len != 0) {
-        xferSPI(ENC28J60_WRITE_BUF_MEM);
-           
-        SPDR = *data++;    
-        while (--len) {
-            uint8_t nextbyte = *data++;
-        	while (!(SPSR & (1<<SPIF)))
-                ;
-            SPDR = nextbyte;
-     	};  
-        while (!(SPSR & (1<<SPIF)))
-            ;
+        while (!(SPSR & (1 << SPIF)));
+        *data++ = SPDR;
     }
     disableChip();
 }
 
-static void SetBank (byte address) {
+static void writeBuf(uint16_t len, const byte *data) {
+    enableChip();
+    if (len != 0) {
+        xferSPI(ENC28J60_WRITE_BUF_MEM);
+
+        SPDR = *data++;
+        while (--len) {
+            uint8_t nextbyte = *data++;
+            while (!(SPSR & (1 << SPIF)));
+            SPDR = nextbyte;
+        };
+        while (!(SPSR & (1 << SPIF)));
+    }
+    disableChip();
+}
+
+static void SetBank(byte address) {
     if ((address & BANK_MASK) != Enc28j60Bank) {
-        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_BSEL1|ECON1_BSEL0);
+        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_BSEL1 | ECON1_BSEL0);
         Enc28j60Bank = address & BANK_MASK;
-        writeOp(ENC28J60_BIT_FIELD_SET, ECON1, Enc28j60Bank>>5);
+        writeOp(ENC28J60_BIT_FIELD_SET, ECON1, Enc28j60Bank >> 5);
     }
 }
 
-static byte readRegByte (byte address) {
+static byte readRegByte(byte address) {
     SetBank(address);
     return readOp(ENC28J60_READ_CTRL_REG, address);
 }
 
 static uint16_t readReg(byte address) {
-    return readRegByte(address) + (readRegByte(address+1) << 8);
+    return readRegByte(address) + (readRegByte(address + 1) << 8);
 }
 
-static void writeRegByte (byte address, byte data) {
+static void writeRegByte(byte address, byte data) {
     SetBank(address);
     writeOp(ENC28J60_WRITE_CTRL_REG, address, data);
 }
@@ -351,23 +346,21 @@ static void writeReg(byte address, uint16_t data) {
     writeRegByte(address + 1, data >> 8);
 }
 
-static uint16_t readPhyByte (byte address) {
+static uint16_t readPhyByte(byte address) {
     writeRegByte(MIREGADR, address);
     writeRegByte(MICMD, MICMD_MIIRD);
-    while (readRegByte(MISTAT) & MISTAT_BUSY)
-        ;
+    while (readRegByte(MISTAT) & MISTAT_BUSY);
     writeRegByte(MICMD, 0x00);
-    return readRegByte(MIRD+1);
+    return readRegByte(MIRD + 1);
 }
 
-static void writePhy (byte address, uint16_t data) {
+static void writePhy(byte address, uint16_t data) {
     writeRegByte(MIREGADR, address);
     writeReg(MIWR, data);
-    while (readRegByte(MISTAT) & MISTAT_BUSY)
-        ;
+    while (readRegByte(MISTAT) & MISTAT_BUSY);
 }
 
-byte ENC28J60::initialize (uint16_t size, const byte* macaddr, byte csPin) {
+byte ENC28J60::initialize(uint16_t size, const byte *macaddr, byte csPin) {
     bufferSize = size;
     if (bitRead(SPCR, SPE) == 0)
         initSPI();
@@ -377,8 +370,7 @@ byte ENC28J60::initialize (uint16_t size, const byte* macaddr, byte csPin) {
 
     writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
     delay(2); // errata B7/2
-    while (!readOp(ENC28J60_READ_CTRL_REG, ESTAT) & ESTAT_CLKRDY)
-        ;
+    while (!readOp(ENC28J60_READ_CTRL_REG, ESTAT) & ESTAT_CLKRDY);
 
     writeReg(ERXST, RXSTART_INIT);
     writeReg(ERXRDPT, RXSTART_INIT);
@@ -386,13 +378,13 @@ byte ENC28J60::initialize (uint16_t size, const byte* macaddr, byte csPin) {
     writeReg(ETXST, TXSTART_INIT);
     writeReg(ETXND, TXSTOP_INIT);
 
-    writeRegByte(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN|ERXFCON_BCEN);
+    writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_PMEN | ERXFCON_BCEN);
     writeReg(EPMM0, 0x303f);
     writeReg(EPMCS, 0xf7f9);
-    writeRegByte(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS);
+    writeRegByte(MACON1, MACON1_MARXEN | MACON1_TXPAUS | MACON1_RXPAUS);
     writeRegByte(MACON2, 0x00);
     writeOp(ENC28J60_BIT_FIELD_SET, MACON3,
-            MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
+            MACON3_PADCFG0 | MACON3_TXCRCEN | MACON3_FRMLNEN);
     writeReg(MAIPG, 0x0C12);
     writeRegByte(MABBIPG, 0x12);
     writeReg(MAMXFL, MAX_FRAMELEN);
@@ -404,7 +396,7 @@ byte ENC28J60::initialize (uint16_t size, const byte* macaddr, byte csPin) {
     writeRegByte(MAADR0, macaddr[5]);
     writePhy(PHCON2, PHCON2_HDLDIS);
     SetBank(ECON1);
-    writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
+    writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE | EIE_PKTIE);
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 
     byte rev = readRegByte(EREVID);
@@ -447,17 +439,17 @@ struct transmit_status_vector {
 };
 
 #if ETHERCARD_SEND_PIPELINING
-    #define BREAKORCONTINUE retry=0; continue;
+#define BREAKORCONTINUE retry=0; continue;
 #else
-    #define BREAKORCONTINUE break;
+#define BREAKORCONTINUE break;
 #endif
 
 void ENC28J60::packetSend(uint16_t len) {
     byte retry = 0;
 
-    #if ETHERCARD_SEND_PIPELINING
-        goto resume_last_transmission;
-    #endif
+#if ETHERCARD_SEND_PIPELINING
+    goto resume_last_transmission;
+#endif
     while (1) {
         // latest errata sheet: DS80349C 
         // always reset transmit logic (Errata Issue 12)
@@ -467,24 +459,24 @@ void ENC28J60::packetSend(uint16_t len) {
         // have a reason for this; they don't mention this in the errata 
         // sheet
         writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
-        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST); 
-        writeOp(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF|EIR_TXIF);
-   
+        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST);
+        writeOp(ENC28J60_BIT_FIELD_CLR, EIR, EIR_TXERIF | EIR_TXIF);
+
         // prepare new transmission 
         if (retry == 0) {
             writeReg(EWRPT, TXSTART_INIT);
-            writeReg(ETXND, TXSTART_INIT+len);
+            writeReg(ETXND, TXSTART_INIT + len);
             writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
             writeBuf(len, buffer);
         }
-   
+
         // initiate transmission
         writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
-        #if ETHERCARD_SEND_PIPELINING
-            if (retry == 0) return;
-        #endif
+#if ETHERCARD_SEND_PIPELINING
+        if (retry == 0) return;
+#endif
 
-    resume_last_transmission:
+        resume_last_transmission:
 
         // wait until transmission has finished; referrring to the data sheet and 
         // to the errata (Errata Issue 13; Example 1) you only need to wait until either 
@@ -492,37 +484,37 @@ void ENC28J60::packetSend(uint16_t len) {
         // realized this and in later implementations of their tcp/ip stack they introduced 
         // a counter to avoid hangs; of course they didn't update the errata sheet 
         uint16_t count = 0;
-        while ((readRegByte(EIR) & (EIR_TXIF | EIR_TXERIF)) == 0 && ++count < 1000U)
-            ;
-   
+        while ((readRegByte(EIR) & (EIR_TXIF | EIR_TXERIF)) == 0 && ++count < 1000U);
+
         if (!(readRegByte(EIR) & EIR_TXERIF) && count < 1000U) {
             // no error; start new transmission
             BREAKORCONTINUE
         }
-   
+
         // cancel previous transmission if stuck
-        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRTS); 
-    
-    #if ETHERCARD_RETRY_LATECOLLISIONS == 0
+        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRTS);
+
+#if ETHERCARD_RETRY_LATECOLLISIONS == 0
         BREAKORCONTINUE
-    #endif
+#endif
 
         // Check whether the chip thinks that a late collision ocurred; the chip
         // may be wrong (Errata Issue 13); therefore we retry. We could check
         // LATECOL in the ESTAT register in order to find out whether the chip
         // thinks a late collision ocurred but (Errata Issue 15) tells us that
         // this is not working. Therefore we check TSV
-        transmit_status_vector tsv;   
+        transmit_status_vector tsv;
         uint16_t etxnd = readReg(ETXND);
-        writeReg(ERDPT, etxnd+1);
-        readBuf(sizeof(transmit_status_vector), (byte*) &tsv);
+        writeReg(ERDPT, etxnd + 1);
+        readBuf(sizeof(transmit_status_vector), (byte * ) & tsv);
         // LATECOL is bit number 29 in TSV (starting from 0)
 
-        if (!((readRegByte(EIR) & EIR_TXERIF) && (tsv.bytes[3] & 1<<5) /*tsv.transmitLateCollision*/) || retry > 16U) {
+        if (!((readRegByte(EIR) & EIR_TXERIF) && (tsv.bytes[3] & 1 << 5) /*tsv.transmitLateCollision*/) ||
+            retry > 16U) {
             // there was some error but no LATECOL so we do not repeat
             BREAKORCONTINUE
         }
-        
+
         retry++;
     }
 }
@@ -623,7 +615,7 @@ uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
     return rev;
 }
 
-byte* ENC28J60::customSend() {
+byte *ENC28J60::customSend() {
 
 
     static byte myip[] = {0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54,
@@ -659,23 +651,31 @@ byte* ENC28J60::customSend() {
 
     static byte tmp[] = {
             //ethernet and ipv6 frame
-                         0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                         0x74, 0x69, 0x69, 0x2D, 0x30, 0x31,
-                         0x86, 0xdd,
-                         0x60,
-                         0x00,
-                         0x00,
-                         0x01,
-                         0x00,
-                         0x64,
-                         0x3b,
-                         0x40,
-                         0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54, 0xBE,
-                         0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54, 0xBD
+            0x20, 0x89, 0x84, 0x1F, 0x61, 0x5D,
+            0x74, 0x69, 0x69, 0x2D, 0x30, 0x31,
+            0x86, 0xdd,
+            0x60,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x64,
+//            0x3b,
+            0x06,
+            0x40,
+            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54, 0xBE,
+            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54, 0xBD,
             //end of ipv6 frame
-                        };
-
-
+            0x00, 0x01, //source port
+            0x0B, 0xB8, //dest port
+            0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
+            0x00, 0x00, 0x00, 0x02,//Acknowledgment, doesn't matter with SYN (right?)
+            0b10100000,
+            0b00000010,
+            0x00, 0xFF,
+            0xFF, 0xFF, //chekcsum
+            0x00, 0x00 //URG not set so doesn't matter
+    };
 
 
     int j = 154;
@@ -705,8 +705,6 @@ byte* ENC28J60::customSend() {
 }
 
 
-
-
 uint16_t ENC28J60::customReceive() {
     static uint16_t gNextPacketPtr = RXSTART_INIT;
     uint16_t len = 0;
@@ -720,13 +718,13 @@ uint16_t ENC28J60::customReceive() {
             uint16_t status;
         } header;
 
-        readBuf(sizeof header, (byte*) &header);
+        readBuf(sizeof header, (byte * ) & header);
 
-        gNextPacketPtr  = header.nextPacket;
+        gNextPacketPtr = header.nextPacket;
         len = header.byteCount - 4; //remove the CRC count
-        if (len>bufferSize-1)
-            len=bufferSize-1;
-        if ((header.status & 0x80)==0)
+        if (len > bufferSize - 1)
+            len = bufferSize - 1;
+        if ((header.status & 0x80) == 0)
             len = 0;
         else
             readBuf(len, buffer);
@@ -740,11 +738,11 @@ uint16_t ENC28J60::customReceive() {
 
 uint16_t ENC28J60::packetReceive() {
     static uint16_t gNextPacketPtr = RXSTART_INIT;
-    static bool     unreleasedPacket = false;
+    static bool unreleasedPacket = false;
     uint16_t len = 0;
 
     if (unreleasedPacket) {
-        if (gNextPacketPtr == 0) 
+        if (gNextPacketPtr == 0)
             writeReg(ERXRDPT, RXSTOP_INIT);
         else
             writeReg(ERXRDPT, gNextPacketPtr - 1);
@@ -760,13 +758,13 @@ uint16_t ENC28J60::packetReceive() {
             uint16_t status;
         } header;
 
-        readBuf(sizeof header, (byte*) &header);
+        readBuf(sizeof header, (byte * ) & header);
 
-        gNextPacketPtr  = header.nextPacket;
+        gNextPacketPtr = header.nextPacket;
         len = header.byteCount - 4; //remove the CRC count
-        if (len>bufferSize-1)
-            len=bufferSize-1;
-        if ((header.status & 0x80)==0)
+        if (len > bufferSize - 1)
+            len = bufferSize - 1;
+        if ((header.status & 0x80) == 0)
             len = 0;
         else
             readBuf(len, buffer);
@@ -788,31 +786,31 @@ void ENC28J60::readPacket(uint16_t len) {
     print_source_ip(buffer);
 }
 
-void ENC28J60::print_source_mac(byte* packet) {
+void ENC28J60::print_source_mac(byte *packet) {
 
-    for(int i = 0; i < 6; i ++) {
+    for (int i = 0; i < 6; i++) {
         Serial.print(packet[i], HEX);
-        if(i != 6) Serial.print(":");
+        if (i != 6) Serial.print(":");
     }
     Serial.println();
 
 }
 
-void ENC28J60::print_dest_mac(byte* packet) {
+void ENC28J60::print_dest_mac(byte *packet) {
 
-    for(int i = 6; i < 12; i++) {
+    for (int i = 6; i < 12; i++) {
         Serial.print(packet[i], HEX);
-        if(i != 12) Serial.print(":");
+        if (i != 12) Serial.print(":");
     }
     Serial.println();
 
 }
 
-void ENC28J60::print_source_ip(byte*packet) {
+void ENC28J60::print_source_ip(byte *packet) {
 
-    for(int i = 22; i < 38; i++) {
+    for (int i = 22; i < 38; i++) {
         Serial.print(packet[i], HEX);
-        if(i > 22 && i%2 == 1){
+        if (i > 22 && i % 2 == 1) {
             Serial.print(":");
         }
     }
