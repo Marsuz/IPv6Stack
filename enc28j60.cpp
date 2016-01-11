@@ -684,21 +684,27 @@ byte *ENC28J60::customSend() {
             0x0B, 0xB8, //dest port
             0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
             0x00, 0x00, 0x00, 0x02,//Acknowledgment, doesn't matter with SYN (right?)
-            0b10100000,
+            0b01010000,
             0b00000010,
             0x00, 0xFF,
-            0xFF, 0xFF, //chekcsum
-            0x00, 0x00 //URG not set so doesn't matter
+            0x00, 0x00, //chekcsum
+            0x00, 0x00 //URG not set, so value here doesn't matter
     };
 
+    tmp[70] =  0;
+    tmp[71] =  0;
+
+    uint16_t checksum = fill_checksum(tmp, 22, (sizeof tmp) - 22);
+    tmp[70] =  checksum >> 8;
+    tmp[71] = checksum;
 
     int j = 154;
     static byte toSend[154];
-    for (int k = 0; k < 54; k++) {
+    for (int k = 0; k < 74; k++) {
         toSend[k] = tmp[k];
     }
-    for (int k = 0; k < 100; k++) {
-        toSend[k + 54] = data[k];
+    for (int k = 0; k < 80; k++) {
+        toSend[k + 74] = data[k];
     }
 
     uint16_t len = 0x1b0;
@@ -772,7 +778,7 @@ uint16_t ENC28J60::packetReceive() {
             uint16_t status;
         } header;
 
-        readBuf(sizeof header, (byte * ) & header);
+        readBuf(sizeof header, (byte *) & header);
 
         gNextPacketPtr = header.nextPacket;
         len = header.byteCount - 4; //remove the CRC count
@@ -789,6 +795,22 @@ uint16_t ENC28J60::packetReceive() {
     }
     return len;
 }
+uint16_t ENC28J60::fill_checksum(const byte* gPB, uint8_t off, uint16_t len) {
+    const uint8_t* ptr = gPB + off;
+
+    uint32_t sum = 0;
+    while(len >1) {
+        sum += (uint16_t) (((uint32_t)*ptr<<8)|*(ptr+1));
+        ptr+=2;
+        len-=2;
+    }
+    if (len)
+        sum += ((uint32_t)*ptr)<<8;
+    while (sum>>16)
+        sum = (uint16_t) sum + (sum >> 16);
+    return (uint16_t)sum;
+}
+
 
 void ENC28J60::readPacket(uint16_t len) {
 //    if(len == 0) return;
