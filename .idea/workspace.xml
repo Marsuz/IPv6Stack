@@ -10,7 +10,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6968bf4f-b235-4511-b000-6d390c557f0b" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/enc28j60.cpp" afterPath="$PROJECT_DIR$/enc28j60.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/enc28j60.h" afterPath="$PROJECT_DIR$/enc28j60.h" />
     </list>
     <ignored path="IPv6Stack.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -44,12 +46,10 @@
       <file leaf-file-name="enc28j60.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/enc28j60.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.035714287">
-              <caret line="822" column="0" selection-start-line="822" selection-start-column="0" selection-end-line="822" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.14285715">
+              <caret line="668" column="0" selection-start-line="668" selection-start-column="0" selection-end-line="668" selection-end-column="0" />
               <folding>
-                <element signature="e#13474#13516#0" expanded="true" />
-                <element signature="e#13659#13689#0" expanded="true" />
-                <element signature="e#14697#14720#0" expanded="true" />
+                <element signature="e#11784#11826#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -59,7 +59,7 @@
         <entry file="file://$PROJECT_DIR$/enc28j60.h">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="113" column="0" selection-start-line="113" selection-start-column="0" selection-end-line="113" selection-end-column="0" />
+              <caret line="82" column="73" selection-start-line="82" selection-start-column="73" selection-end-line="82" selection-end-column="73" />
               <folding />
             </state>
           </provider>
@@ -68,8 +68,8 @@
       <file leaf-file-name="EthernetModule.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EthernetModule.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="169" column="31" selection-start-line="169" selection-start-column="31" selection-end-line="169" selection-end-column="31" />
+            <state vertical-scroll-proportion="-6.3055553">
+              <caret line="160" column="4" selection-start-line="160" selection-start-column="4" selection-end-line="161" selection-end-column="25" />
               <folding />
             </state>
           </provider>
@@ -79,7 +79,7 @@
         <entry file="file://$PROJECT_DIR$/test.ino">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="3" column="39" selection-start-line="3" selection-start-column="39" selection-end-line="3" selection-end-column="39" />
+              <caret line="23" column="23" selection-start-line="23" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -97,6 +97,7 @@
         <option value="$PROJECT_DIR$/ipv6sender.cpp" />
         <option value="$PROJECT_DIR$/test.ino" />
         <option value="$PROJECT_DIR$/EthernetModule.cpp" />
+        <option value="$PROJECT_DIR$/enc28j60.h" />
         <option value="$PROJECT_DIR$/enc28j60.cpp" />
       </list>
     </option>
@@ -255,7 +256,14 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="1" />
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/enc28j60.cpp</url>
+          <line>815</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="2" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -273,9 +281,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -317,9 +323,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -361,9 +365,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="307" column="23" selection-start-line="307" selection-start-column="23" selection-end-line="307" selection-end-column="23" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -381,9 +383,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="307" column="23" selection-start-line="307" selection-start-column="23" selection-end-line="307" selection-end-column="23" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -425,9 +425,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="307" column="23" selection-start-line="307" selection-start-column="23" selection-end-line="307" selection-end-column="23" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -469,9 +467,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="303" column="23" selection-start-line="303" selection-start-column="23" selection-end-line="303" selection-end-column="23" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -505,9 +501,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -533,9 +527,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -556,18 +548,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/enc28j60.h">
+    <entry file="file://$PROJECT_DIR$/contributors.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="113" column="0" selection-start-line="113" selection-start-column="0" selection-end-line="113" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/EthernetModule.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="169" column="31" selection-start-line="169" selection-start-column="31" selection-end-line="169" selection-end-column="31" />
+          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -575,27 +559,33 @@
     <entry file="file://$PROJECT_DIR$/test.ino">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="3" column="39" selection-start-line="3" selection-start-column="39" selection-end-line="3" selection-end-column="39" />
+          <caret line="23" column="23" selection-start-line="23" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/contributors.txt">
+    <entry file="file://$PROJECT_DIR$/EthernetModule.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-6.3055553">
+          <caret line="160" column="4" selection-start-line="160" selection-start-column="4" selection-end-line="161" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/enc28j60.h">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <caret line="82" column="73" selection-start-line="82" selection-start-column="73" selection-end-line="82" selection-end-column="73" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/enc28j60.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.035714287">
-          <caret line="822" column="0" selection-start-line="822" selection-start-column="0" selection-end-line="822" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.14285715">
+          <caret line="668" column="0" selection-start-line="668" selection-start-column="0" selection-end-line="668" selection-end-column="0" />
           <folding>
-            <element signature="e#13474#13516#0" expanded="true" />
-            <element signature="e#13659#13689#0" expanded="true" />
-            <element signature="e#14697#14720#0" expanded="true" />
+            <element signature="e#11784#11826#0" expanded="true" />
           </folding>
         </state>
       </provider>

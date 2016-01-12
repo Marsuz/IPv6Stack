@@ -72,7 +72,15 @@ public:
 
     static uint16_t customReceive();
 
+    static uint32_t sendTCPSyn();
+
+    static uint32_t receiveTCPSynAck();
+
+    static uint32_t sendTCPAck();
+
     static uint16_t calc_checksum(const byte* gPB, uint8_t off, uint16_t len);
+
+    static uint32_t calc_seqnum(const byte* gPB, int lbound, int ubound);
 
     static void readPacket(uint16_t len);
 

@@ -14,6 +14,7 @@
 uint16_t ENC28J60::bufferSize;
 bool ENC28J60::broadcast_enabled = false;
 bool ENC28J60::promiscuous_enabled = false;
+static uint8_t tcp_client_state;
 
 // ENC28J60 Control Registers
 // Control register definitions are a combination of address,
@@ -398,6 +399,7 @@ struct transmit_status_vector {
 
 uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
 //
+    tcp_client_state = 1;
     bufferSize = size;
     byte csPin = 8;
     if (bitRead(SPCR, SPE) == 0)
@@ -582,7 +584,7 @@ uint16_t ENC28J60::customReceive() {
             uint16_t status;
         } header;
 
-        readBuf(sizeof header, (byte * ) & header);
+        readBuf(sizeof header, (byte *) & header);
 
         gNextPacketPtr = header.nextPacket;
         len = header.byteCount - 4; //remove the CRC count
@@ -600,8 +602,9 @@ uint16_t ENC28J60::customReceive() {
 }
 
 
-uint16_t ENC28J60::sendTCPSyn() {
+uint32_t ENC28J60::sendTCPSyn() {
 
+    if(tcp_client_state != 1) return 0;
     static byte tmp[] = {
             //ethernet and ipv6 frame
             0x20, 0x89, 0x84, 0x1F, 0x61, 0x5D,
@@ -626,7 +629,7 @@ uint16_t ENC28J60::sendTCPSyn() {
             0b01010000,
             0b00000010,
             0x00, 0xFF,
-            0x00, 0x00, //chekcsum
+            0x00, 0x00, //checksum
             0x00, 0x00 //URG not set, so value here doesn't matter
     };
 
@@ -641,7 +644,7 @@ uint16_t ENC28J60::sendTCPSyn() {
         toSend[k + 74] = 1;
     }
 
-    uint16_t seqNum = calc_seqnum(toSend, 58, 61);
+    uint32_t seqNum = calc_seqnum(toSend, 58, 61);
 
     uint16_t checksum = calc_checksum(toSend, 22, (sizeof toSend) - 22);
     toSend[70] =  checksum >> 8;
@@ -661,20 +664,101 @@ uint16_t ENC28J60::sendTCPSyn() {
 
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS); //Transmit Request to Send
 
+    return seqNum;
+}
+
+uint32_t ENC28J60::receiveTCPSynAck(uint32_t) {
+
+    if(tcp_client_state != 2) {
+        tcp_client_state = 1;
+        return 0;
+    }
+    uint16_t len = customReceive();
+    byte *packet = new byte[len];
+    readBuf(len, packet);
+    uint32_t seqNum;
+    if(packet[67] & 0b00010010) {
+        seqNum = calc_seqnum(packet, 58, 61);
+    } else {
+        tcp_client_state = 1;
+        return 0;
+    }
+    return seqNum;
+}
+
+uint32_t ENC28J60::sendTCPAck(uint32_t seqNum) {
+
+    if(tcp_client_state != 2) return 0;
+    static byte tmp[] = {
+            //ethernet and ipv6 frame
+            0x20, 0x89, 0x84, 0x1F, 0x61, 0x5D,
+            0x74, 0x69, 0x69, 0x2D, 0x30, 0x31,
+            0x86, 0xdd,
+            0x60,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x64,
+//            0x3b,
+            0x06,
+            0x40,
+            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54, 0xBE,
+            0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54, 0xBD,
+            //end of ipv6 frame
+            0x00, 0x01, //source port
+            0x0B, 0xB8, //dest port
+            0x00, 0x00, 0x00, 0x00,//Sequence number, theoretically random 58-61 bytes
+            0x00, 0x00, 0x00, 0x02,//Acknowledgment, doesn't matter with SYN (right?)
+            0b01010000,
+            0b00010000,
+            0x00, 0xFF,
+            0x00, 0x00, //checksum
+            0x00, 0x00 //URG not set, so value here doesn't matter
+    };
+
+    seqNum++;
+    tmp[58] = (byte) (seqNum>>24);
+    tmp[59] = (byte) (seqNum>>16);
+    tmp[60] = (byte) (seqNum>>8);
+    tmp[61] = (byte) (seqNum);
+
+    tmp[70] =  0;
+    tmp[71] =  0;
+
+    static byte toSend[154];
+    for (int k = 0; k < 74; k++) {
+        toSend[k] = tmp[k];
+    }
+    for (int k = 0; k < 80; k++) {
+        toSend[k + 74] = 1;
+    }
+
+    uint32_t seqNum = calc_seqnum(toSend, 58, 61);
+
+    uint16_t checksum = calc_checksum(toSend, 22, (sizeof toSend) - 22);
+    toSend[70] =  checksum >> 8;
+    toSend[71] = checksum;
+
+    uint16_t len = 0x1b0;
+
+    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST); //Transmit Logic is held in Reset
+    writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST); //normal operation
+    writeOp(ENC28J60_BIT_FIELD_CLR, EIR,
+            EIR_TXERIF | EIR_TXIF); //Interrupt - No transmit error nor transmit interrupt pending
+
+    writeReg(EWRPT, TXSTART_INIT);
+    writeReg(ETXND, TXSTART_INIT + (sizeof toSend));
+    writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
+    writeBuf(sizeof toSend, toSend);
+
+    writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS); //Transmit Request to Send
+
+    tcp_client_state = 3;
+    return seqNum;
 
 }
 
-uint16_t ENC28J60::receiveTCPSyn() {
-
-}
-
-uint16_t ENC28J60::sendTCPAck() {
-
-}
-
-uint15_t ENC28J60::receiveTCPAck() {
-
-}
 
 
 
@@ -717,6 +801,9 @@ uint16_t ENC28J60::packetReceive() {
     }
     return len;
 }
+
+
+
 uint16_t ENC28J60::calc_checksum(const byte* gPB, uint8_t off, uint16_t len) {
     const uint8_t* ptr = gPB + off;
 
@@ -734,7 +821,12 @@ uint16_t ENC28J60::calc_checksum(const byte* gPB, uint8_t off, uint16_t len) {
 }
 
 uint32_t ENC28J60::calc_seqnum(const byte* gPB, int lbound, int ubound) {
-    uint
+    uint32_t result = 0;
+    for(int i = lbound; i <= ubound; i++) {
+        result = result<<8;
+        result += (uint32_t)gPB[i];
+    }
+    return result;
 };
 
 
