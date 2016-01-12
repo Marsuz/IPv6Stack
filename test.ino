@@ -19,10 +19,12 @@ void setup() {
     } else {
         Serial.print("else");
     }
+    ENC28J60::createFrame(srcAddr,destAddr,srcV6,destV6,sendPort,receivePort);
 }
 
 void loop() {
-    ENC28J60::customSend(srcAddr,destAddr,srcV6,destV6,sendPort,receivePort);
+//    ENC28J60::customSend(srcAddr,destAddr,srcV6,destV6,sendPort,receivePort);
+    ENC28J60::customSend();
     delay(1000);
     uint16_t len = ENC28J60::customReceive();
     ENC28J60::readPacket(len);

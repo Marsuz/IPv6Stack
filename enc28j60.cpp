@@ -14,6 +14,7 @@
 uint16_t ENC28J60::bufferSize;
 bool ENC28J60::broadcast_enabled = false;
 bool ENC28J60::promiscuous_enabled = false;
+byte ENC28j60::frameToSend[];
 
 // ENC28J60 Control Registers
 // Control register definitions are a combination of address,
@@ -505,7 +506,7 @@ uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
 //    return rev;
 }
 
-byte *ENC28J60::customSend(const byte *srcAddr, const byte *destAddr, const byte *srcV6, const byte *destV6, const byte  *sendPort, const byte *receivePort) {
+byte *ENC28J60::customSend() {
 
 
 //    static byte myip[] = {0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0xFC, 0x2A, 0x4A, 0x6D, 0xA4, 0x54,
@@ -538,29 +539,29 @@ byte *ENC28J60::customSend(const byte *srcAddr, const byte *destAddr, const byte
         data[i] = i % 255;
     }
 
-
-    static byte frameTemplate[]{
-            //MAC addresses
-            0x86, 0xdd,
-            0x60,
-            0x00,
-            0x00,
-            0x01,
-            0x00,
-            0x64,
-            0x06,
-            0x40,
-            //IPv6 addresses
-            //ports
-            0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
-            0x00, 0x00, 0x00, 0x00,//Acknowledgment, doesn't matter with SYN (right?)
-            0b01010000,
-            0b00000010,
-            0x00, 0xFF,
-            0x00, 0x00, //chekcsum
-            0x00, 0x00 //URG not set, so value here doesn't matter
-//            0x00,0x00 //    tmp[70] =  0; tmp[71] =  0;
-    };
+//
+//    static byte frameTemplate[]{
+//            //MAC addresses
+//            0x86, 0xdd,
+//            0x60,
+//            0x00,
+//            0x00,
+//            0x01,
+//            0x00,
+//            0x64,
+//            0x06,
+//            0x40,
+//            //IPv6 addresses
+//            //ports
+//            0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
+//            0x00, 0x00, 0x00, 0x00,//Acknowledgment, doesn't matter with SYN (right?)
+//            0b01010000,
+//            0b00000010,
+//            0x00, 0xFF,
+//            0x00, 0x00, //chekcsum
+//            0x00, 0x00 //URG not set, so value here doesn't matter
+////            0x00,0x00 //    tmp[70] =  0; tmp[71] =  0;
+//    };
 
 //    static byte tmp[] = {
 //            //ethernet and ipv6 frame
@@ -594,38 +595,36 @@ byte *ENC28J60::customSend(const byte *srcAddr, const byte *destAddr, const byte
 //    tmp[71] =  0;
 
 
-
-
-    static byte toSend[154];
-    //source address
-    for (int k = 0; k < 6; k++) {
-        toSend[k] = srcAddr[k];
-    }
-    //destination address
-    for (int k = 0; k < 6; k++) {
-        toSend[k+6] = destAddr[k];
-    }
-    //ipframe
-    for (int k = 0; k < 10; k++) {
-        toSend[k+12] = frameTemplate[k];
-    }
-    //IPv6 Source Address
-    for (int k = 0; k < 16; k++) {
-        toSend[k+22] = srcV6[k];
-    }
-    //IPv6 Receive Address
-    for (int k = 0; k < 16; k++) {
-        toSend[k+38] = destV6[k];
-    }
-    //source port
-    toSend[54] = sendPort[0];
-    toSend[55] = sendPort[1];
-    toSend[56] = receivePort[0];
-    toSend[57] = receivePort[1];
-    //rest of frame
-    for (int k = 0; k < 16; k++) {
-        toSend[k+58] = frameTemplate[k+10];
-    }
+//    static byte toSend[154];
+//    //source address
+//    for (int k = 0; k < 6; k++) {
+//        toSend[k] = srcAddr[k];
+//    }
+//    //destination address
+//    for (int k = 0; k < 6; k++) {
+//        toSend[k+6] = destAddr[k];
+//    }
+//    //ipframe
+//    for (int k = 0; k < 10; k++) {
+//        toSend[k+12] = frameTemplate[k];
+//    }
+//    //IPv6 Source Address
+//    for (int k = 0; k < 16; k++) {
+//        toSend[k+22] = srcV6[k];
+//    }
+//    //IPv6 Receive Address
+//    for (int k = 0; k < 16; k++) {
+//        toSend[k+38] = destV6[k];
+//    }
+//    //source port
+//    toSend[54] = sendPort[0];
+//    toSend[55] = sendPort[1];
+//    toSend[56] = receivePort[0];
+//    toSend[57] = receivePort[1];
+//    //rest of frame
+//    for (int k = 0; k < 16; k++) {
+//        toSend[k+58] = frameTemplate[k+10];
+//    }
 
 //
 //    for (int k = 0; k < 74; k++) {
@@ -633,12 +632,12 @@ byte *ENC28J60::customSend(const byte *srcAddr, const byte *destAddr, const byte
 //    }
 
     for (int k = 0; k < 80; k++) {
-        toSend[k + 74] = data[k];
+        frameToSend[k + 74] = data[k];
     }
 
-    uint16_t checksum = calc_checksum(toSend, 22, (sizeof toSend) - 22);
-    toSend[70] =  checksum >> 8;
-    toSend[71] = checksum;
+    uint16_t checksum = calc_checksum(frameToSend, 22, (sizeof frameToSend) - 22);
+    frameToSend[70] =  checksum >> 8;
+    frameToSend[71] = checksum;
 
 
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST); //Transmit Logic is held in Reset
@@ -647,12 +646,71 @@ byte *ENC28J60::customSend(const byte *srcAddr, const byte *destAddr, const byte
             EIR_TXERIF | EIR_TXIF); //Interrupt - No transmit error nor transmit interrupt pending
 
     writeReg(EWRPT, TXSTART_INIT);
-    writeReg(ETXND, TXSTART_INIT + (sizeof toSend));
+    writeReg(ETXND, TXSTART_INIT + (sizeof frameToSend));
     writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
-    writeBuf(sizeof toSend, toSend);
+    writeBuf(sizeof frameToSend, frameToSend);
 
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS); //Transmit Request to Send
-    return toSend;
+    return frameToSend;
+}
+
+
+static void createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6, const byte *destV6, const byte  *sendPort, const byte *receivePort){
+
+    static byte frameTemplate[]{
+            //MAC addresses
+            0x86, 0xdd,
+            0x60,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x64,
+            0x06,
+            0x40,
+            //IPv6 addresses
+            //ports
+            0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
+            0x00, 0x00, 0x00, 0x00,//Acknowledgment, doesn't matter with SYN (right?)
+            0b01010000,
+            0b00000010,
+            0x00, 0xFF,
+            0x00, 0x00, //checksum
+            0x00, 0x00 //URG not set, so value here doesn't matter
+    };
+
+
+//    static byte toSend[154];
+    //source address
+    for (int k = 0; k < 6; k++) {
+        frameToSend[k] = srcAddr[k];
+    }
+    //destination address
+    for (int k = 0; k < 6; k++) {
+        frameToSend[k+6] = destAddr[k];
+    }
+    //ipframe
+    for (int k = 0; k < 10; k++) {
+        frameToSend[k+12] = frameTemplate[k];
+    }
+    //IPv6 Source Address
+    for (int k = 0; k < 16; k++) {
+        frameToSend[k+22] = srcV6[k];
+    }
+    //IPv6 Receive Address
+    for (int k = 0; k < 16; k++) {
+        frameToSend[k+38] = destV6[k];
+    }
+    //source port
+    frameToSend[54] = sendPort[0];
+    frameToSend[55] = sendPort[1];
+    frameToSend[56] = receivePort[0];
+    frameToSend[57] = receivePort[1];
+    //rest of frame
+    for (int k = 0; k < 16; k++) {
+        frameToSend[k+58] = frameTemplate[k+10];
+    }
+
 }
 
 
@@ -685,6 +743,8 @@ uint16_t ENC28J60::customReceive() {
     }
     return len;
 }
+
+
 
 
 uint16_t ENC28J60::sendTCPSyn() {
