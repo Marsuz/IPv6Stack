@@ -42,6 +42,8 @@ public:
     static uint16_t bufferSize; //!< Size of data buffer
     static bool broadcast_enabled; //!< True if broadcasts enabled (used to allow temporary disable of broadcast for DHCP or other internal functions)
     static bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
+    static byte frameToSend[];
+
 
     static uint8_t* tcpOffset () { return buffer + 0x36; } //!< Pointer to the start of TCP payload
 
@@ -90,6 +92,8 @@ public:
     static void print_dest_mac(byte* packet);
 
     static void print_source_ip(byte*packet);
+
+    static void createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6, const byte *destV6, const byte  *sendPort, const byte *receivePort);
 };
 
 typedef ENC28J60 Ethernet; //!< Define alias Ethernet for ENC28J60
