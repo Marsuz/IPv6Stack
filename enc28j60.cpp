@@ -15,7 +15,7 @@ uint16_t ENC28J60::bufferSize;
 bool ENC28J60::broadcast_enabled = false;
 bool ENC28J60::promiscuous_enabled = false;
 static uint8_t tcp_client_state;
-byte ENC28j60::frameToSend[];
+static byte frameToSend[154];
 
 // ENC28J60 Control Registers
 // Control register definitions are a combination of address,
@@ -628,10 +628,6 @@ byte *ENC28J60::customSend() {
 //        toSend[k+58] = frameTemplate[k+10];
 //    }
 
-//
-//    for (int k = 0; k < 74; k++) {
-//        toSend[k] = tmp[k];
-//    }
 
     for (int k = 0; k < 80; k++) {
         frameToSend[k + 74] = data[k];
@@ -657,7 +653,7 @@ byte *ENC28J60::customSend() {
 }
 
 
-static void createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6, const byte *destV6, const byte  *sendPort, const byte *receivePort){
+void ENC28J60::createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6, const byte *destV6, const byte  *sendPort, const byte *receivePort){
 
     static byte frameTemplate[]{
             //MAC addresses
@@ -812,7 +808,7 @@ uint32_t ENC28J60::sendTCPSyn() {
     return seqNum;
 }
 
-uint32_t ENC28J60::receiveTCPSynAck(uint32_t) {
+uint32_t ENC28J60::receiveTCPSynAck() {
 
     if(tcp_client_state != 2) {
         tcp_client_state = 1;
@@ -879,8 +875,6 @@ uint32_t ENC28J60::sendTCPAck(uint32_t seqNum) {
         toSend[k + 74] = 1;
     }
 
-    uint32_t seqNum = calc_seqnum(toSend, 58, 61);
-
     uint16_t checksum = calc_checksum(toSend, 22, (sizeof toSend) - 22);
     toSend[70] =  checksum >> 8;
     toSend[71] = checksum;
@@ -904,48 +898,6 @@ uint32_t ENC28J60::sendTCPAck(uint32_t seqNum) {
 
 }
 
-
-
-
-uint16_t ENC28J60::packetReceive() {
-    static uint16_t gNextPacketPtr = RXSTART_INIT;
-    static bool unreleasedPacket = false;
-    uint16_t len = 0;
-
-    if (unreleasedPacket) {
-        if (gNextPacketPtr == 0)
-            writeReg(ERXRDPT, RXSTOP_INIT);
-        else
-            writeReg(ERXRDPT, gNextPacketPtr - 1);
-        unreleasedPacket = false;
-    }
-
-    if (readRegByte(EPKTCNT) > 0) {
-        writeReg(ERDPT, gNextPacketPtr);
-
-        struct {
-            uint16_t nextPacket;
-            uint16_t byteCount;
-            uint16_t status;
-        } header;
-
-        readBuf(sizeof header, (byte *) & header);
-
-        gNextPacketPtr = header.nextPacket;
-        len = header.byteCount - 4; //remove the CRC count
-        if (len > bufferSize - 1)
-            len = bufferSize - 1;
-        if ((header.status & 0x80) == 0)
-            len = 0;
-        else
-            readBuf(len, buffer);
-        buffer[len] = 0;
-        unreleasedPacket = true;
-
-        writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
-    }
-    return len;
-}
 
 
 

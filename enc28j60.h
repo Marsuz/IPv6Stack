@@ -42,7 +42,7 @@ public:
     static uint16_t bufferSize; //!< Size of data buffer
     static bool broadcast_enabled; //!< True if broadcasts enabled (used to allow temporary disable of broadcast for DHCP or other internal functions)
     static bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
-    static byte frameToSend[];
+//    static byte frameToSend[];
 
 
     static uint8_t* tcpOffset () { return buffer + 0x36; } //!< Pointer to the start of TCP payload
@@ -78,7 +78,7 @@ public:
 
     static uint32_t receiveTCPSynAck();
 
-    static uint32_t sendTCPAck();
+    static uint32_t sendTCPAck(uint32_t seqNum);
 
     static uint16_t calc_checksum(const byte* gPB, uint8_t off, uint16_t len);
 
