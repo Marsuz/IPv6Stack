@@ -469,7 +469,7 @@ uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
 
 
 
-void ENC28J60::customSend(bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend) {
+void ENC28J60::customSend(bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend, uint16_t size) {
 
     static byte data[100];
     for (int i = 0; i < 100; i++) {
@@ -484,9 +484,10 @@ void ENC28J60::customSend(bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend)
         frameToSend[70] = 0;
         frameToSend[71] = 0;
 
-        uint16_t checksum = calc_checksum(frameToSend, 22, (sizeof frameToSend) - 22);
+        uint16_t checksum = calc_checksum(frameToSend, 22, size - 22);
         frameToSend[70] = checksum >> 8;
         frameToSend[71] = checksum;
+
 
 
         writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST); //Transmit Logic is held in Reset
@@ -494,13 +495,15 @@ void ENC28J60::customSend(bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend)
         writeOp(ENC28J60_BIT_FIELD_CLR, EIR,
                 EIR_TXERIF | EIR_TXIF); //Interrupt - No transmit error nor transmit interrupt pending
 
+
+
         writeReg(EWRPT, TXSTART_INIT);
-        writeReg(ETXND, TXSTART_INIT + (sizeof frameToSend));
+        writeReg(ETXND, TXSTART_INIT + size);
         writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
-        writeBuf(sizeof frameToSend, frameToSend);
+        writeBuf(size, frameToSend);
 
         writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS); //Transmit Request to Send
-        delete frameToSend;
+        delete [] frameToSend;
 }
 
 void ENC28J60::createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6,
@@ -511,10 +514,14 @@ void ENC28J60::createFrame(const byte *srcAddr, const byte *destAddr, const byte
 }
 
 void ENC28J60::sendTestFrame() {
-    Serial.print("Sending Test Frame");
-    byte * data;
-    byte * frameToSend = packet->getTCPPacket(data, false, true, false);
-    customSend(false, false, false, data);
+    Serial.print("Sending Test Frame\n");
+    byte data[2];
+    data[0] = 0x01;
+    data[1] = 0x02;
+    byte * frameToSend = packet->getTCPPacket(data, true, false, false, (uint16_t)2);
+    uint16_t size = packet->getSize();
+
+    customSend(false, false, false, frameToSend, size);
 }
 
 uint16_t ENC28J60::customReceive() {
@@ -562,15 +569,16 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
 
 void ENC28J60::send_tcp_ack() {
     Serial.print("Sending tcp ack\n");
-    byte * data;
-    byte * frameToSend = packet->getTCPPacket(data, false, true, false);
+    byte data[0];
+    byte * frameToSend = packet->getTCPPacket(data, true, false, false, (uint16_t)0);
+    uint16_t size = packet->getSize();
     frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
 //    uint32_t payload = get_payload();//TODO: 1. Get payload length of packet
     uint32_t payload = 0;
     seq_plus_payload_to_ack(payload, frameToSend);
     add_to_seqnum((uint32_t)0, frameToSend);
     //here should be option to send packet without any data!
-    customSend(false, true, false, frameToSend);
+    customSend(false, true, false, frameToSend, size);
 }
 
 uint32_t ENC28J60::packetLoop(uint16_t plen) {
@@ -584,11 +592,12 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
 
     if (buffer[TCP_FLAGS_P] & TCP_FLAGS_SYN_V) { //send SYN+ACK
         Serial.print("Packet Loop If\n");
-        byte * data;
-        byte * frameToSend = packet->getTCPPacket(data, false, true, false);
+        byte data[0];
+        byte * frameToSend = packet->getTCPPacket(data, true, false, false, (uint16_t)0);
+        uint16_t size = packet->getSize();
         seq_plus_payload_to_ack((uint32_t)1, frameToSend);
         frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
-        customSend(false, true, false, frameToSend);
+        customSend(false, true, false, frameToSend, size);
     }
     else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {   //This is an acknowledgement to our SYN+ACK so let's start processing that payload
         Serial.print("Packet Loop else if\n");
@@ -604,11 +613,12 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
         }
 
         else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
-            byte * data;
-            byte * frameToSend = packet->getTCPPacket(data, false, true, false);
+            byte data[0];
+            byte * frameToSend = packet->getTCPPacket(data, true, false, false, (uint16_t)0);
+            uint16_t size = packet->getSize();
             seq_plus_payload_to_ack((uint32_t)1, frameToSend);
             frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_FIN;
-            customSend(false, true, false, frameToSend);
+            customSend(false, true, false, frameToSend, size);
         }
     }
 

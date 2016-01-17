@@ -1,7 +1,7 @@
 //
 // Created by Marcin on 2016-01-16.
 //
-
+#include <Arduino.h>
 #include "Frame.h"
 Frame::Frame(const byte *_srcAddr, const byte *_destAddr, const byte *_srcV6,
              const byte *_destV6, const byte  *_sendPort, const byte *_receivePort) {
@@ -46,10 +46,14 @@ const byte * Frame::getReceivePort() {
     return receivePort;
 }
 
-byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck, const bool ifRes) {
+uint16_t Frame::getSize() {
+    return size;
+}
 
-    int size = (sizeof(data)/sizeof(*data));
-    byte* packet = new  byte[74 + size];
+byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck, const bool ifRes, const uint16_t sizeOfData) {
+
+    size = 74 + sizeOfData;
+    byte* packet = new byte[size];
 
     static byte frameTemplate[]{
             //MAC addresses

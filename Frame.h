@@ -19,7 +19,7 @@ class Frame {
     const byte *destV6;
     const byte *sendPort;
     const byte *receivePort;
-
+    uint16_t size;
     public:
 
     Frame(const byte *_srcAddr, const byte *_destAddr, const byte *_srcV6,
@@ -31,6 +31,7 @@ class Frame {
     const byte* getDestV6();
     const byte* getSendPort();
     const byte* getReceivePort();
+    uint16_t getSize();
 
 //    byte* setSrcAddr(byte*);
 //    byte* setDestAddr(byte*);
@@ -39,7 +40,7 @@ class Frame {
 //    byte* setSendPort(byte*);
 //    byte* setReceivePort(byte*);
 
-    byte* getTCPPacket(const byte* data, const  bool ifSyn, const  bool ifAck, const  bool ifRes);
+    byte* getTCPPacket(const byte* data, const  bool ifSyn, const  bool ifAck, const  bool ifRes, const uint16_t sizeOfData);
 
 
 };

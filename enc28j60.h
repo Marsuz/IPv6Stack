@@ -68,7 +68,7 @@ public:
     *     @param  len Size of data to send
     *     @note   Data buffer is shared by recieve and transmit functions
     */
-    static void customSend (bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend);
+    static void customSend (bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend, uint16_t size);
 
     static void sendTestFrame();
 
