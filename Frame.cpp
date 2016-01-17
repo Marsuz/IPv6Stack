@@ -15,6 +15,15 @@ Frame::Frame(byte *_srcAddr, byte *_destAddr, byte *_srcV6,
     receivePort = _receivePort;
 }
 
+Frame::~Frame() {
+    delete[] srcAddr;
+    delete[] destAddr;
+    delete[] srcV6;
+    delete[] destV6;
+    delete[] sendPort;
+    delete[] receivePort;
+}
+
 ::Frame::byte * Frame::getSrcAddr() {
     return srcAddr;
 }
@@ -43,6 +52,7 @@ Frame::Frame(byte *_srcAddr, byte *_destAddr, byte *_srcV6,
 
     int size = (sizeof(data)/sizeof(*data));
     byte packet = new (nothrow) byte[74 + size];
+
     static byte frameTemplate[]{
             //MAC addresses
             0x86, 0xdd,

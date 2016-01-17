@@ -19,7 +19,9 @@ class Frame {
     byte *receivePort;
 
     public:
+
     void Frame(byte *, byte *, byte *, byte *, byte *, byte *);
+    void ~Frame();
     byte* getSrcAddr();
     byte* getDestAddr();
     byte* getSrcV6();

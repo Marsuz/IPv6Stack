@@ -47,7 +47,7 @@ public:
     static bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
 //    static byte frameToSend[];
 
-    Frame packet;
+    Frame* packet;
 
     static uint8_t* tcpOffset () { return buffer + 0x36; } //!< Pointer to the start of TCP payload
 
