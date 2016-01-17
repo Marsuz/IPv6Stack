@@ -11,8 +11,11 @@
 // 2010-05-20 <jc@wippler.nl>
 /** @file */
 
+
 #ifndef ENC28J60_H
 #define ENC28J60_H
+
+#include "Frame.h"
 
 // buffer boundaries applied to internal 8K ram
 // the entire available packet buffer space is allocated
@@ -44,6 +47,7 @@ public:
     static bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
 //    static byte frameToSend[];
 
+    Frame packet;
 
     static uint8_t* tcpOffset () { return buffer + 0x36; } //!< Pointer to the start of TCP payload
 
@@ -65,7 +69,7 @@ public:
     *     @param  len Size of data to send
     *     @note   Data buffer is shared by recieve and transmit functions
     */
-    static byte* customSend ();
+    static byte* customSend (bool, bool, bool);
 
     /**   @brief  Copy recieved packets to data buffer
     *     @return <i>uint16_t</i> Size of recieved data
@@ -93,7 +97,8 @@ public:
 
     static void print_source_ip(byte*packet);
 
-    static void createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6, const byte *destV6, const byte  *sendPort, const byte *receivePort);
+    static void createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6,
+                            const byte *destV6, const byte  *sendPort, const byte *receivePort);
 };
 
 typedef ENC28J60 Ethernet; //!< Define alias Ethernet for ENC28J60
