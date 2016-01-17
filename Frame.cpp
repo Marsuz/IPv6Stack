@@ -50,7 +50,8 @@ uint16_t Frame::getSize() {
     return size;
 }
 
-byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck, const bool ifRes, const uint16_t sizeOfData) {
+byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck, const bool ifRes,
+                           const bool ifFin, const uint16_t sizeOfData, const byte* destPort) {
 
     size = 74 + sizeOfData;
     byte* packet = new byte[size];
@@ -71,7 +72,7 @@ byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck,
             0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
             0x00, 0x00, 0x00, 0x00,//Acknowledgment, doesn't matter with SYN (right?)
             0b01010000,
-            0b00000010,
+            0b00000000,
             0x00, 0xFF,
             0x00, 0x00, //checksum
             0x00, 0x00 //URG not set, so value here doesn't matter
@@ -97,6 +98,8 @@ byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck,
         packet[k+38] = destV6[k];
     }
     //source port
+    receivePort[0] = destPort[0];
+    receivePort[1] = destPort[1];
     packet[54] = sendPort[0];
     packet[55] = sendPort[1];
     packet[56] = receivePort[0];
@@ -117,7 +120,10 @@ byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck,
         packet[64] = packet[64] | (0b00010000);
     }
     if(ifRes) {
-        packet[64] = 0b00000100;
+        packet[64] = 0b00010100;
+    }
+    if(ifFin) {
+        packet[64] = 0b00010001;
     }
 
     return packet;

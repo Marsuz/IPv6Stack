@@ -27,6 +27,7 @@
 //        ENC28J60::customSend(false, false, false);
 //        ENC28J60::sendTestFrame();
         uint32_t pos = ENC28J60::packetLoop(ENC28J60::customReceive());
+        ENC28J60::printTempHum();
         if(pos > 0) {
             ENC28J60::process_tcp_request(pos);
         }
