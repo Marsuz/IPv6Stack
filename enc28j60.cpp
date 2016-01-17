@@ -1,9 +1,11 @@
 #include <Arduino.h> // Arduino 1.0
 #include "enc28j60.h"
+#include "Adafruit_HDC1000.h"
+#include <Wire.h>
 
 uint16_t ENC28J60::bufferSize;
-bool ENC28J60::broadcast_enabled = false;
-bool ENC28J60::promiscuous_enabled = false;
+//bool ENC28J60::broadcast_enabled = false;
+//bool ENC28J60::promiscuous_enabled = false;
 static uint8_t tcp_client_state;
 static uint32_t seq = 1;
 static Frame* packet;
@@ -241,6 +243,7 @@ static Frame* packet;
 #define TCP_SEQ_P 0x3a
 #define TCP_ACK_P 0x3e
 
+static Adafruit_HDC1000 hdc = Adafruit_HDC1000();
 static byte Enc28j60Bank;
 static byte selectPin;
 
@@ -408,6 +411,11 @@ struct transmit_status_vector {
 
 
 uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
+
+    if (!hdc.begin()) {
+        Serial.println("Couldn't find sensor!");
+        while (1);
+    }
 
     tcp_client_state = 1;
     bufferSize = size;
@@ -690,8 +698,6 @@ void ENC28J60::print_source_mac(byte *packet) {
         Serial.print(packet[i], HEX);
         if (i != 6) Serial.print(":");
     }
-    Serial.println();
-
 }
 
 void ENC28J60::print_dest_mac(byte *packet) {
@@ -713,6 +719,13 @@ void ENC28J60::print_source_ip(byte *packet) {
         }
     }
     Serial.println();
+}
+
+
+void ENC28J60::printTempHum() {
+    Serial.print("\nTemp: "); Serial.print(hdc.readTemperature());
+    Serial.print("\t\tHum: "); Serial.println(hdc.readHumidity());
+
 }
 
 
