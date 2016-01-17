@@ -515,7 +515,7 @@ byte *ENC28J60::customSend(bool ifSyn, bool ifAck, bool ifRst) {
         data[i] = i % 255;
     }
 
-    byte * frameToSend = packet.getTCPPacket(ifSyn, ifAck, ifRst);
+    byte * frameToSend = packet.getTCPPacket(data, ifSyn, ifAck, ifRst);
     /*for (int k = 0; k < 80; k++) {
         frameToSend[k + 74] = data[k];
     }*/
