@@ -233,7 +233,7 @@ static Frame* packet;
 #define TCP_FLAGS_SYN_V 2
 #define TCP_FLAGS_ACK_ONLY 0x10
 #define TCP_FLAGS_ACK_FIN 0x11
-#define TCP_FLAGS_P 0x42
+#define TCP_FLAGS_P 0x43
 
 
 #define TCP_HEADER_LEN_P 0x3c
@@ -588,8 +588,13 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
 //    if (gPB[TCP_DST_PORT_H_P] == (port >> 8) && TODO: check if ports are consistent
 //        gPB[TCP_DST_PORT_L_P] == ((uint8_t) port))
 //    {   //Packet targetted at specified port
-
-
+    Serial.println("\nIN PACKET LOOP: ");
+    for (int i = 0; i < 154; i++) {
+        if(i%10 == 0 ) Serial.println();
+        Serial.print(buffer[i], HEX);
+        Serial.print(":");
+    }
+    Serial.println("\n----------------------------------------\n");
     if (buffer[TCP_FLAGS_P] & TCP_FLAGS_SYN_V) { //send SYN+ACK
         Serial.print("Packet Loop If\n");
         byte data[0];

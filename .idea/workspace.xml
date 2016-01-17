@@ -9,9 +9,9 @@
     </ADDITIONAL_GENERATION_ENVIRONMENT>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4ad9642b-81ea-4223-926a-4a5f06470b05" name="Default" comment="working with  mocked frame">
+    <list default="true" id="4ad9642b-81ea-4223-926a-4a5f06470b05" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test.ino" afterPath="$PROJECT_DIR$/test.ino" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/enc28j60.cpp" afterPath="$PROJECT_DIR$/enc28j60.cpp" />
     </list>
     <ignored path="IPv6Stack.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -42,11 +42,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test.ino" pinned="false" current-in-tab="true">
+      <file leaf-file-name="test.ino" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.ino">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.79153097">
-              <caret line="36" column="5" selection-start-line="36" selection-start-column="5" selection-end-line="36" selection-end-column="5" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="9" column="36" selection-start-line="9" selection-start-column="36" selection-end-line="9" selection-end-column="36" />
               <folding />
             </state>
           </provider>
@@ -62,11 +62,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="enc28j60.cpp" pinned="false" current-in-tab="false">
+      <file leaf-file-name="enc28j60.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/enc28j60.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="530" column="31" selection-start-line="530" selection-start-column="22" selection-end-line="530" selection-end-column="31" />
+            <state vertical-scroll-proportion="0.44299674">
+              <caret line="601" column="42" selection-start-line="601" selection-start-column="42" selection-end-line="601" selection-end-column="42" />
               <folding>
                 <element signature="e#12595#12637#0" expanded="true" />
               </folding>
@@ -116,9 +116,9 @@
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/Frame.h" />
         <option value="$PROJECT_DIR$/Frame.cpp" />
-        <option value="$PROJECT_DIR$/enc28j60.cpp" />
         <option value="$PROJECT_DIR$/enc28j60.h" />
         <option value="$PROJECT_DIR$/test.ino" />
+        <option value="$PROJECT_DIR$/enc28j60.cpp" />
       </list>
     </option>
   </component>
@@ -127,6 +127,7 @@
   <component name="JsGulpfileManager">
     <detection-done>true</detection-done>
   </component>
+  <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
     <option name="x" value="-1" />
     <option name="y" value="30" />
@@ -355,7 +356,13 @@
       <option name="project" value="LOCAL" />
       <updated>1453059666294</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="main program updated">
+      <created>1453066559563</created>
+      <option name="number" value="00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1453066559563</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -418,7 +425,8 @@
     <MESSAGE value="handshake implemented (tests needed)" />
     <MESSAGE value="compilation errors fixed, still some problems with packetLoop conditions" />
     <MESSAGE value="working with  mocked frame" />
-    <option name="LAST_COMMIT_MESSAGE" value="working with  mocked frame" />
+    <MESSAGE value="main program updated" />
+    <option name="LAST_COMMIT_MESSAGE" value="main program updated" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -585,21 +593,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/enc28j60.cpp">
+    <entry file="file://$PROJECT_DIR$/test.ino">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="530" column="31" selection-start-line="530" selection-start-column="22" selection-end-line="530" selection-end-column="31" />
-          <folding>
-            <element signature="e#12595#12637#0" expanded="true" />
-          </folding>
+          <caret line="9" column="36" selection-start-line="9" selection-start-column="36" selection-end-line="9" selection-end-column="36" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test.ino">
+    <entry file="file://$PROJECT_DIR$/enc28j60.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.79153097">
-          <caret line="36" column="5" selection-start-line="36" selection-start-column="5" selection-end-line="36" selection-end-column="5" />
-          <folding />
+        <state vertical-scroll-proportion="0.44299674">
+          <caret line="601" column="42" selection-start-line="601" selection-start-column="42" selection-end-line="601" selection-end-column="42" />
+          <folding>
+            <element signature="e#12595#12637#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
