@@ -40,7 +40,8 @@ class Frame {
 //    byte* setSendPort(byte*);
 //    byte* setReceivePort(byte*);
 
-    byte* getTCPPacket(const byte* data, const  bool ifSyn, const  bool ifAck, const  bool ifRes, const uint16_t sizeOfData);
+    byte* getTCPPacket(const byte* data, const  bool ifSyn, const  bool ifAck,
+                       const  bool ifRes, const bool ifFinm, const uint16_t sizeOfData, const byte* destPort);
 
 
 };

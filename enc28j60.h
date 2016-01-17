@@ -37,6 +37,8 @@
 // to use this functionality
 #define ENC_HEAP_START      SCRATCH_LIMIT
 #define ENC_HEAP_END        0x2000
+#define TCP_SOURCE_PORT1 54
+#define TCP_SOURCE_PORT2 55
 
 /** This class provide low-level interfacing with the ENC28J60 network interface. This is used by the EtherCard class and not intended for use by (normal) end users. */
 class ENC28J60 {
@@ -46,6 +48,7 @@ public:
 //    static bool broadcast_enabled; //!< True if broadcasts enabled (used to allow temporary disable of broadcast for DHCP or other internal functions)
 //    static bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
 //    static byte frameToSend[];
+    static uint8_t tcp_state;
 
 
 //    static uint8_t* tcpOffset () { return buffer + 0x36; } //!< Pointer to the start of TCP payload
@@ -68,7 +71,7 @@ public:
     *     @param  len Size of data to send
     *     @note   Data buffer is shared by recieve and transmit functions
     */
-    static void customSend (bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend, uint16_t size);
+    static void customSend (byte* frameToSend, uint16_t size);
 
     static void sendTestFrame();
 
@@ -107,6 +110,8 @@ public:
                             const byte *destV6, const byte  *sendPort, const byte *receivePort);
 
     static void printTempHum();
+
+    static byte* getPort();
 };
 
 typedef ENC28J60 Ethernet; //!< Define alias Ethernet for ENC28J60

@@ -6,7 +6,6 @@
 uint16_t ENC28J60::bufferSize;
 //bool ENC28J60::broadcast_enabled = false;
 //bool ENC28J60::promiscuous_enabled = false;
-static uint8_t tcp_client_state;
 static uint32_t seq = 1;
 static Frame* packet;
 
@@ -231,10 +230,11 @@ static Frame* packet;
 #define IP_PAYLOAD_LEN_H 0x12
 #define IP_PAYLOAD_LEN_L 0x13
 
-#define TCP_FLAGS_FIN_V 1
-#define TCP_FLAGS_SYN_V 2
-#define TCP_FLAGS_ACK_ONLY 0x10
-#define TCP_FLAGS_ACK_FIN 0x11
+#define TCP_FLAGS_FIN_V 0b00000001
+#define TCP_FLAGS_SYN_V 0b00000010
+#define TCP_FLAGS_ACK_ONLY 0b00010000
+#define TCP_FLAGS_SYN_ACK 0b00010010
+#define TCP_FLAGS_ACK_FIN 0b00010001
 #define TCP_FLAGS_P 0x42
 
 
@@ -412,12 +412,12 @@ struct transmit_status_vector {
 
 uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
 
+    tcp_state = 1;
     if (!hdc.begin()) {
         Serial.println("Couldn't find sensor!");
         while (1);
     }
 
-    tcp_client_state = 1;
     bufferSize = size;
     byte csPin = 8;
     if (bitRead(SPCR, SPE) == 0)
@@ -477,13 +477,7 @@ uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
 
 
 
-void ENC28J60::customSend(bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend, uint16_t size) {
-
-    static byte data[100];
-    for (int i = 0; i < 100; i++) {
-        data[i] = i % 255;
-    }
-
+void ENC28J60::customSend(byte* frameToSend, uint16_t size) {
 
         /*for (int k = 0; k < 80; k++) {
             frameToSend[k + 74] = data[k];
@@ -526,10 +520,10 @@ void ENC28J60::sendTestFrame() {
     byte data[2];
     data[0] = 0x01;
     data[1] = 0x02;
-    byte * frameToSend = packet->getTCPPacket(data, true, false, false, (uint16_t)2);
+    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)2);
     uint16_t size = packet->getSize();
 
-    customSend(false, false, false, frameToSend, size);
+    customSend(frameToSend, size);
 }
 
 uint16_t ENC28J60::customReceive() {
@@ -578,7 +572,7 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
 void ENC28J60::send_tcp_ack() {
     Serial.print("Sending tcp ack\n");
     byte data[0];
-    byte * frameToSend = packet->getTCPPacket(data, true, false, false, (uint16_t)0);
+    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0);
     uint16_t size = packet->getSize();
     frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
 //    uint32_t payload = get_payload();//TODO: 1. Get payload length of packet
@@ -586,7 +580,7 @@ void ENC28J60::send_tcp_ack() {
     seq_plus_payload_to_ack(payload, frameToSend);
     add_to_seqnum((uint32_t)0, frameToSend);
     //here should be option to send packet without any data!
-    customSend(false, true, false, frameToSend, size);
+    customSend(frameToSend, size);
 }
 
 uint32_t ENC28J60::packetLoop(uint16_t plen) {
@@ -598,36 +592,40 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
 //    {   //Packet targetted at specified port
 
 
-    if (buffer[TCP_FLAGS_P] & TCP_FLAGS_SYN_V) { //send SYN+ACK
+    if (tcp_state == 1 && (buffer[TCP_FLAGS_P] & TCP_FLAGS_SYN_V)) { //send SYN+ACK
+        tcp_state = 2;
         Serial.print("Packet Loop If\n");
         byte data[0];
-        byte * frameToSend = packet->getTCPPacket(data, true, false, false, (uint16_t)0);
+        byte * frameToSend = packet->getTCPPacket(data, true, true, false, false,(uint16_t) 0, getPort());
         uint16_t size = packet->getSize();
         seq_plus_payload_to_ack((uint32_t)1, frameToSend);
-        frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
-        customSend(false, true, false, frameToSend, size);
-    }
-    else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {   //This is an acknowledgement to our SYN+ACK so let's start processing that payload
-        Serial.print("Packet Loop else if\n");
-        uint16_t info_data_len = 0;
-        info_data_len = buffer[IP_PAYLOAD_LEN_H] << 8;
-        info_data_len += buffer[IP_PAYLOAD_LEN_L];
+        //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
+        customSend(frameToSend, size);
+    } else if(tcp_state == 2) {
+        if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {   //This is an acknowledgement to our SYN+ACK so let's start processing that payload
+            tcp_state = 3;
+            Serial.print("Packet Loop else if\n");
+            uint16_t info_data_len = 0;
+            info_data_len = buffer[IP_PAYLOAD_LEN_H] << 8;
+            info_data_len += buffer[IP_PAYLOAD_LEN_L];
 
-        if (info_data_len > 0) {   //Got some data0
+            if (info_data_len > 0) {   //Got some data0
 
-            uint16_t pos = ((uint16_t)TCP_SRC_PORT_H_P+(buffer[TCP_HEADER_LEN_P]>>4)*4); // start of data field in TCP frame
-            if (pos <= plen)
-                return pos;
+                uint16_t pos = ((uint16_t) TCP_SRC_PORT_H_P +
+                                (buffer[TCP_HEADER_LEN_P] >> 4) * 4); // start of data field in TCP frame
+                if (pos <= plen)
+                    return pos;
+            } else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
+                byte data[0];
+                byte *frameToSend = packet->getTCPPacket(data, false, true, false, true,(uint16_t) 0, getPort());
+                uint16_t size = packet->getSize();
+                seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
+                //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_FIN;
+                customSend(frameToSend, size);
+                tcp_state = 1;
+            }
         }
-
-        else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
-            byte data[0];
-            byte * frameToSend = packet->getTCPPacket(data, true, false, false, (uint16_t)0);
-            uint16_t size = packet->getSize();
-            seq_plus_payload_to_ack((uint32_t)1, frameToSend);
-            frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_FIN;
-            customSend(false, true, false, frameToSend, size);
-        }
+        // send RST TCP packet
     }
 
     return 0;
@@ -726,6 +724,12 @@ void ENC28J60::printTempHum() {
     Serial.print("\nTemp: "); Serial.print(hdc.readTemperature());
     Serial.print("\t\tHum: "); Serial.println(hdc.readHumidity());
 
+}
+
+byte * ENC28J60::getPort() {
+    byte port[2];
+    port[0] = buffer[TCP_SOURCE_PORT1];
+    port[1] = buffer[TCP_SOURCE_PORT2];
 }
 
 
