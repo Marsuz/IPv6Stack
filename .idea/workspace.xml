@@ -9,12 +9,9 @@
     </ADDITIONAL_GENERATION_ENVIRONMENT>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4ad9642b-81ea-4223-926a-4a5f06470b05" name="Default" comment="bug fix">
+    <list default="true" id="4ad9642b-81ea-4223-926a-4a5f06470b05" name="Default" comment="working with  mocked frame">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Frame.cpp" afterPath="$PROJECT_DIR$/Frame.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Frame.h" afterPath="$PROJECT_DIR$/Frame.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/enc28j60.cpp" afterPath="$PROJECT_DIR$/enc28j60.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/enc28j60.h" afterPath="$PROJECT_DIR$/enc28j60.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test.ino" afterPath="$PROJECT_DIR$/test.ino" />
     </list>
     <ignored path="IPv6Stack.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -48,8 +45,8 @@
       <file leaf-file-name="test.ino" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test.ino">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.5602606">
-              <caret line="27" column="34" selection-start-line="27" selection-start-column="34" selection-end-line="27" selection-end-column="34" />
+            <state vertical-scroll-proportion="0.79153097">
+              <caret line="36" column="5" selection-start-line="36" selection-start-column="5" selection-end-line="36" selection-end-column="5" />
               <folding />
             </state>
           </provider>
@@ -59,7 +56,7 @@
         <entry file="file://$PROJECT_DIR$/enc28j60.h">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="70" column="96" selection-start-line="70" selection-start-column="96" selection-end-line="70" selection-end-column="96" />
+              <caret line="70" column="95" selection-start-line="70" selection-start-column="95" selection-end-line="70" selection-end-column="95" />
               <folding />
             </state>
           </provider>
@@ -69,7 +66,7 @@
         <entry file="file://$PROJECT_DIR$/enc28j60.cpp">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="673" column="5" selection-start-line="673" selection-start-column="5" selection-end-line="673" selection-end-column="5" />
+              <caret line="530" column="31" selection-start-line="530" selection-start-column="22" selection-end-line="530" selection-end-column="31" />
               <folding>
                 <element signature="e#12595#12637#0" expanded="true" />
               </folding>
@@ -116,12 +113,12 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/.idea/.name" />
-        <option value="$PROJECT_DIR$/test.ino" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/Frame.h" />
         <option value="$PROJECT_DIR$/Frame.cpp" />
         <option value="$PROJECT_DIR$/enc28j60.cpp" />
         <option value="$PROJECT_DIR$/enc28j60.h" />
+        <option value="$PROJECT_DIR$/test.ino" />
       </list>
     </option>
   </component>
@@ -352,7 +349,13 @@
       <option name="project" value="LOCAL" />
       <updated>1453054412697</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="working with  mocked frame">
+      <created>1453059666294</created>
+      <option name="number" value="00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1453059666294</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -414,17 +417,11 @@
     <MESSAGE value="merged and cleaned" />
     <MESSAGE value="handshake implemented (tests needed)" />
     <MESSAGE value="compilation errors fixed, still some problems with packetLoop conditions" />
-    <option name="LAST_COMMIT_MESSAGE" value="compilation errors fixed, still some problems with packetLoop conditions" />
+    <MESSAGE value="working with  mocked frame" />
+    <option name="LAST_COMMIT_MESSAGE" value="working with  mocked frame" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/test.ino</url>
-          <line>14</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-      </breakpoints>
       <option name="time" value="4" />
     </breakpoint-manager>
     <watches-manager />
@@ -580,28 +577,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/enc28j60.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="70" column="95" selection-start-line="70" selection-start-column="95" selection-end-line="70" selection-end-column="95" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/enc28j60.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="673" column="5" selection-start-line="673" selection-start-column="5" selection-end-line="673" selection-end-column="5" />
+          <caret line="530" column="31" selection-start-line="530" selection-start-column="22" selection-end-line="530" selection-end-column="31" />
           <folding>
             <element signature="e#12595#12637#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/enc28j60.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="70" column="96" selection-start-line="70" selection-start-column="96" selection-end-line="70" selection-end-column="96" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test.ino">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5602606">
-          <caret line="27" column="34" selection-start-line="27" selection-start-column="34" selection-end-line="27" selection-end-column="34" />
+        <state vertical-scroll-proportion="0.79153097">
+          <caret line="36" column="5" selection-start-line="36" selection-start-column="5" selection-end-line="36" selection-end-column="5" />
           <folding />
         </state>
       </provider>
