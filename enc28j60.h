@@ -47,7 +47,6 @@ public:
     static bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
 //    static byte frameToSend[];
 
-    Frame* packet;
 
     static uint8_t* tcpOffset () { return buffer + 0x36; } //!< Pointer to the start of TCP payload
 
@@ -69,7 +68,9 @@ public:
     *     @param  len Size of data to send
     *     @note   Data buffer is shared by recieve and transmit functions
     */
-    static byte* customSend (bool, bool, bool);
+    static void customSend (bool ifSyn, bool ifAck, bool ifRst, byte* frameToSend);
+
+    static void sendTestFrame();
 
     /**   @brief  Copy recieved packets to data buffer
     *     @return <i>uint16_t</i> Size of recieved data
@@ -78,20 +79,20 @@ public:
 
     static uint16_t customReceive();
 
-    static void seq_plus_payload_to_ack();
+    static void seq_plus_payload_to_ack(uint32_t payload, byte *frameToSend);
 
-    static void process_tcp_request();
+    static void process_tcp_request(uint32_t pos);
 
     static void send_tcp_ack();
 
     static uint32_t packetLoop(uint16_t plen);
 
 
-    static uint16_t calc_checksum(const byte* gPB, uint8_t off, uint16_t len);
+    static uint16_t calc_checksum(byte* gPB, uint8_t off, uint16_t len);
 
-    static void add_to_seqnum();
+    static void add_to_seqnum(uint32_t number, byte *frameToSend);
 
-    static uint32_t get_seqnum(const byte* gPB, int lbound, int ubound);
+    static uint32_t get_seqnum(int lbound, int ubound);
 
     static void readPacket(uint16_t len);
 

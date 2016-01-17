@@ -3,10 +3,8 @@
 //
 
 #include "Frame.h"
-
-
-Frame::Frame(byte *_srcAddr, byte *_destAddr, byte *_srcV6,
-             byte *_destV6, byte  *_sendPort, byte *_receivePort) : {
+Frame::Frame(const byte *_srcAddr, const byte *_destAddr, const byte *_srcV6,
+             const byte *_destV6, const byte  *_sendPort, const byte *_receivePort) {
     srcAddr = _srcAddr;
     destAddr = _destAddr;
     srcV6 = _srcV6;
@@ -24,34 +22,34 @@ Frame::~Frame() {
     delete[] receivePort;
 }
 
-::Frame::byte * Frame::getSrcAddr() {
+const byte * Frame::getSrcAddr() {
     return srcAddr;
 }
 
-::Frame::byte * Frame::getDestAddr() {
+const byte * Frame::getDestAddr() {
     return destAddr;
 }
 
-::Frame::byte* Frame::getSrcV6() {
+const byte* Frame::getSrcV6() {
     return srcV6;
 }
 
-::Frame::byte* Frame::getDestV6() {
+const byte* Frame::getDestV6() {
     return destV6;
 }
 
-::Frame::byte * Frame::getSendPort() {
+const byte * Frame::getSendPort() {
     return sendPort;
 }
 
-::Frame::byte * Frame::getReceivePort() {
+const byte * Frame::getReceivePort() {
     return receivePort;
 }
 
-::Frame::byte * Frame::getTCPPacket(byte* data, bool ifSyn, bool ifAck, bool ifRes) {
+byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck, const bool ifRes) {
 
     int size = (sizeof(data)/sizeof(*data));
-    byte packet = new (nothrow) byte[74 + size];
+    byte* packet = new  byte[74 + size];
 
     static byte frameTemplate[]{
             //MAC addresses
