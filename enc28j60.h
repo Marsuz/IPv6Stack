@@ -78,15 +78,20 @@ public:
 
     static uint16_t customReceive();
 
-    static uint32_t sendTCPSyn();
+    static void seq_plus_payload_to_ack();
 
-    static uint32_t receiveTCPSynAck();
+    static void process_tcp_request();
 
-    static uint32_t sendTCPAck(uint32_t seqNum);
+    static void send_tcp_ack();
+
+    static uint32_t packetLoop(uint16_t plen);
+
 
     static uint16_t calc_checksum(const byte* gPB, uint8_t off, uint16_t len);
 
-    static uint32_t calc_seqnum(const byte* gPB, int lbound, int ubound);
+    static void add_to_seqnum();
+
+    static uint32_t get_seqnum(const byte* gPB, int lbound, int ubound);
 
     static void readPacket(uint16_t len);
 
