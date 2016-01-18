@@ -4,8 +4,7 @@
 #include <Wire.h>
 
 uint16_t ENC28J60::bufferSize;
-//bool ENC28J60::broadcast_enabled = false;
-//bool ENC28J60::promiscuous_enabled = false;
+
 static uint32_t seq = 1;
 static Frame* packet;
 
@@ -17,7 +16,6 @@ static Frame* packet;
 // - MAC/PHY indicator        (bit 7)
 #define ADDR_MASK        0x1F
 #define BANK_MASK        0x60
-//#define SPRD_MASK        0x80
 // All-bank registers
 #define EIE              0x1B
 #define EIR              0x1C
@@ -32,45 +30,18 @@ static Frame* packet;
 #define ERXST           (0x08|0x00)
 #define ERXND           (0x0A|0x00)
 #define ERXRDPT         (0x0C|0x00)
-// #define ERXWRPT         (0x0E|0x00)
-//#define EDMAST          (0x10|0x00)
-//#define EDMAND          (0x12|0x00)
-// #define EDMADST         (0x14|0x00)
-//#define EDMACS          (0x16|0x00)
 // Bank 1 registers
-//#define EHT0             (0x00|0x20)
-//#define EHT1             (0x01|0x20)
-//#define EHT2             (0x02|0x20)
-//#define EHT3             (0x03|0x20)
-//#define EHT4             (0x04|0x20)
-//#define EHT5             (0x05|0x20)
-//#define EHT6             (0x06|0x20)
-//#define EHT7             (0x07|0x20)
 #define EPMM0            (0x08|0x20)
-//#define EPMM1            (0x09|0x20)
-//#define EPMM2            (0x0A|0x20)
-//#define EPMM3            (0x0B|0x20)
-//#define EPMM4            (0x0C|0x20)
-//#define EPMM5            (0x0D|0x20)
-//#define EPMM6            (0x0E|0x20)
-//#define EPMM7            (0x0F|0x20)
 #define EPMCS           (0x10|0x20)
-// #define EPMO            (0x14|0x20)
-//#define EWOLIE           (0x16|0x20)
-//#define EWOLIR           (0x17|0x20)
 #define ERXFCON          (0x18|0x20)
 #define EPKTCNT          (0x19|0x20)
 // Bank 2 registers
 #define MACON1           (0x00|0x40|0x80)
 #define MACON2           (0x01|0x40|0x80)
 #define MACON3           (0x02|0x40|0x80)
-//#define MACON4           (0x03|0x40|0x80)
 #define MABBIPG          (0x04|0x40|0x80)
 #define MAIPG           (0x06|0x40|0x80)
-//#define MACLCON1         (0x08|0x40|0x80)
-//#define MACLCON2         (0x09|0x40|0x80)
 #define MAMXFL          (0x0A|0x40|0x80)
-//#define MAPHSUP          (0x0D|0x40|0x80)
 #define MICON            (0x11|0x40|0x80)
 #define MICMD            (0x12|0x40|0x80)
 #define MIREGADR         (0x14|0x40|0x80)
@@ -83,133 +54,51 @@ static Frame* packet;
 #define MAADR2           (0x03|0x60|0x80)
 #define MAADR5           (0x04|0x60|0x80)
 #define MAADR4           (0x05|0x60|0x80)
-//#define EBSTSD           (0x06|0x60)
 #define EBSTCON          (0x07|0x60)
-//#define EBSTCS          (0x08|0x60)
 #define MISTAT           (0x0A|0x60|0x80)
 #define EREVID           (0x12|0x60)
-//#define ECOCON           (0x15|0x60)
-//#define EFLOCON          (0x17|0x60)
-//#define EPAUS           (0x18|0x60)
 
 // ENC28J60 ERXFCON Register Bit Definitions
 #define ERXFCON_UCEN     0x80
 #define ERXFCON_ANDOR    0x40
 #define ERXFCON_CRCEN    0x20
 #define ERXFCON_PMEN     0x10
-//#define ERXFCON_MPEN     0x08
-//#define ERXFCON_HTEN     0x04
-//#define ERXFCON_MCEN     0x02
 #define ERXFCON_BCEN     0x01
-// ENC28J60 EIE Register Bit Definitions
 #define EIE_INTIE        0x80
 #define EIE_PKTIE        0x40
-//#define EIE_DMAIE        0x20
-//#define EIE_LINKIE       0x10
-//#define EIE_TXIE         0x08
-//#define EIE_WOLIE        0x04
-//#define EIE_TXERIE       0x02
-//#define EIE_RXERIE       0x01
 // ENC28J60 EIR Register Bit Definitions
-//#define EIR_PKTIF        0x40
-//#define EIR_DMAIF        0x20
-//#define EIR_LINKIF       0x10
 #define EIR_TXIF         0x08
-//#define EIR_WOLIF        0x04
 #define EIR_TXERIF       0x02
-//#define EIR_RXERIF       0x01
 // ENC28J60 ESTAT Register Bit Definitions
-//#define ESTAT_INT        0x80
-//#define ESTAT_LATECOL    0x10
-//#define ESTAT_RXBUSY     0x04
-//#define ESTAT_TXABRT     0x02
 #define ESTAT_CLKRDY     0x01
 // ENC28J60 ECON2 Register Bit Definitions
-//#define ECON2_AUTOINC    0x80
 #define ECON2_PKTDEC     0x40
-//#define ECON2_PWRSV      0x20
-//#define ECON2_VRPS       0x08
 // ENC28J60 ECON1 Register Bit Definitions
 #define ECON1_TXRST      0x80
-//#define ECON1_RXRST      0x40
-//#define ECON1_DMAST      0x20
-//#define ECON1_CSUMEN     0x10
 #define ECON1_TXRTS      0x08
 #define ECON1_RXEN       0x04
 #define ECON1_BSEL1      0x02
 #define ECON1_BSEL0      0x01
 // ENC28J60 MACON1 Register Bit Definitions
-//#define MACON1_LOOPBK    0x10
 #define MACON1_TXPAUS    0x08
 #define MACON1_RXPAUS    0x04
-//#define MACON1_PASSALL   0x02
 #define MACON1_MARXEN    0x01
-// ENC28J60 MACON2 Register Bit Definitions
-//#define MACON2_MARST     0x80
-//#define MACON2_RNDRST    0x40
-//#define MACON2_MARXRST   0x08
-//#define MACON2_RFUNRST   0x04
-//#define MACON2_MATXRST   0x02
-//#define MACON2_TFUNRST   0x01
 // ENC28J60 MACON3 Register Bit Definitions
-//#define MACON3_PADCFG2   0x80
-//#define MACON3_PADCFG1   0x40
 #define MACON3_PADCFG0   0x20
 #define MACON3_TXCRCEN   0x10
-//#define MACON3_PHDRLEN   0x08
-//#define MACON3_HFRMLEN   0x04
 #define MACON3_FRMLNEN   0x02
-//#define MACON3_FULDPX    0x01
 // ENC28J60 MICMD Register Bit Definitions
-//#define MICMD_MIISCAN    0x02
 #define MICMD_MIIRD      0x01
 // ENC28J60 MISTAT Register Bit Definitions
-//#define MISTAT_NVALID    0x04
-//#define MISTAT_SCAN      0x02
 #define MISTAT_BUSY      0x01
-
-// ENC28J60 EBSTCON Register Bit Definitions
-//#define EBSTCON_PSV2     0x80
-//#define EBSTCON_PSV1     0x40
-//#define EBSTCON_PSV0     0x20
-//#define EBSTCON_PSEL     0x10
-//#define EBSTCON_TMSEL1   0x08
-//#define EBSTCON_TMSEL0   0x04
-//#define EBSTCON_TME      0x02
-//#define EBSTCON_BISTST    0x01
 
 // PHY registers
 #define PHCON1           0x00
 #define PHSTAT1          0x01
-//#define PHHID1           0x02
-//#define PHHID2           0x03
 #define PHCON2           0x10
-//#define PHSTAT2          0x11
-//#define PHIE             0x12
-//#define PHIR             0x13
-//#define PHLCON           0x14
 
-// ENC28J60 PHY PHCON1 Register Bit Definitions
-//#define PHCON1_PRST      0x8000
-//#define PHCON1_PLOOPBK   0x4000
-//#define PHCON1_PPWRSV    0x0800
-//#define PHCON1_PDPXMD    0x0100
-// ENC28J60 PHY PHSTAT1 Register Bit Definitions
-//#define PHSTAT1_PFDPX    0x1000
-//#define PHSTAT1_PHDPX    0x0800
-//#define PHSTAT1_LLSTAT   0x0004
-//#define PHSTAT1_JBSTAT   0x0002
 // ENC28J60 PHY PHCON2 Register Bit Definitions
-//#define PHCON2_FRCLINK   0x4000
-//#define PHCON2_TXDIS     0x2000
-//#define PHCON2_JABBER    0x0400
 #define PHCON2_HDLDIS    0x0100
-
-// ENC28J60 Packet Control Byte Bit Definitions
-//#define PKTCTRL_PHUGEEN  0x08
-//#define PKTCTRL_PPADEN   0x04
-//#define PKTCTRL_PCRCEN   0x02
-//#define PKTCTRL_POVERRIDE 0x01
 
 // SPI operation codes
 #define ENC28J60_READ_CTRL_REG       0x00
@@ -223,9 +112,6 @@ static Frame* packet;
 // max frame length which the controller will accept:
 // (note: maximum ethernet frame length would be 1518)
 #define MAX_FRAMELEN      1500
-
-//#define FULL_SPEED        1   // switch to full-speed SPI for bulk transfers
-
 
 #define IP_PAYLOAD_LEN_H 0x12
 #define IP_PAYLOAD_LEN_L 0x13
@@ -375,43 +261,12 @@ static void writePhy(byte address, uint16_t data) {
     while (readRegByte(MISTAT) & MISTAT_BUSY);
 }
 
-/*
-struct __attribute__((__packed__)) transmit_status_vector {
-    uint16_t transmitByteCount;
-    byte     transmitCollisionCount      :  4;
-    byte     transmitCrcError            :  1;
-    byte     transmitLengthCheckError    :  1;
-    byte     transmitLengthOutRangeError :  1;
-    byte     transmitDone                :  1;
-    byte     transmitMulticast           :  1;
-    byte     transmitBroadcast           :  1;
-    byte     transmitPacketDefer         :  1;
-    byte     transmitExcessiveDefer      :  1;
-    byte     transmitExcessiveCollision  :  1;
-    byte     transmitLateCollision       :  1;
-    byte     transmitGiant               :  1;
-    byte     transmitUnderrun            :  1;
-    uint16_t totalTransmitted; 
-    byte     transmitControlFrame        :  1;
-    byte     transmitPauseControlFrame   :  1;
-    byte     backpressureApplied         :  1;
-    byte     transmitVLAN                :  1;
-    byte     zero                        :  4;
-};
-*/
 
 struct transmit_status_vector {
     uint8_t bytes[7];
 };
 
-#if ETHERCARD_SEND_PIPELINING
-#define BREAKORCONTINUE retry=0; continue;
-#else
-#define BREAKORCONTINUE break;
-#endif
-
-
-uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
+uint8_t ENC28J60::initialize(uint16_t size, const uint8_t *macaddr) {
 
     tcp_state = 1;
     if (!hdc.begin()) {
@@ -478,7 +333,7 @@ uint8_t ENC28J60::customInitialize(uint16_t size, const uint8_t *macaddr) {
 
 
 
-void ENC28J60::customSend(byte* frameToSend, uint16_t size) {
+void ENC28J60::send(byte *frameToSend, uint16_t size) {
 
         /*for (int k = 0; k < 80; k++) {
             frameToSend[k + 74] = data[k];
@@ -510,7 +365,7 @@ void ENC28J60::customSend(byte* frameToSend, uint16_t size) {
 }
 
 void ENC28J60::createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6,
-                           const byte *destV6, const byte  *sendPort, byte *receivePort) {
+                           const byte *destV6, const byte  *sendPort, const byte *receivePort) {
 
     packet = new Frame(srcAddr, destAddr, srcV6, destV6, sendPort, receivePort);
 
@@ -524,10 +379,10 @@ void ENC28J60::createFrame(const byte *srcAddr, const byte *destAddr, const byte
 //    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)2);
 //    uint16_t size = packet->getSize();
 //
-//    customSend(frameToSend, size);
+//    send(frameToSend, size);
 //}
 
-uint16_t ENC28J60::customReceive() {
+uint16_t ENC28J60::receive() {
     static uint16_t gNextPacketPtr = RXSTART_INIT;
     uint16_t len = 0;
     if (readRegByte(EPKTCNT) > 0) {
@@ -581,7 +436,7 @@ void ENC28J60::send_tcp_ack() {
     seq_plus_payload_to_ack(payload, frameToSend);
     add_to_seqnum((uint32_t)0, frameToSend);
     //here should be option to send packet without any data!
-    customSend(frameToSend, size);
+    send(frameToSend, size);
 }
 
 uint32_t ENC28J60::packetLoop(uint16_t plen) {
@@ -608,7 +463,7 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
         uint16_t size = packet->getSize();
         seq_plus_payload_to_ack((uint32_t)1, frameToSend);
         //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
-        customSend(frameToSend, size);
+        send(frameToSend, size);
     } else if(tcp_state == 2) {
         if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {   //This is an acknowledgement to our SYN+ACK so let's start processing that payload
             tcp_state = 3;
@@ -629,7 +484,7 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
                 uint16_t size = packet->getSize();
                 seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
                 //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_FIN;
-                customSend(frameToSend, size);
+                send(frameToSend, size);
                 tcp_state = 1;
             }
         }

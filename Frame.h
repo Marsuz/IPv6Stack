@@ -1,7 +1,3 @@
-//
-// Created by Marcin on 2016-01-16.
-//
-
 #ifndef IPV6STACK_FRAME_H
 #define IPV6STACK_FRAME_H
 

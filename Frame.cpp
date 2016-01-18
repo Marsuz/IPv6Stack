@@ -1,10 +1,7 @@
-//
-// Created by Marcin on 2016-01-16.
-//
 #include <Arduino.h>
 #include "Frame.h"
 Frame::Frame(const byte *_destAddr, const byte *_srcAddr, const byte *_srcV6,
-             const byte *_destV6, const byte  *_sendPort, byte *_receivePort) {
+             const byte *_destV6, const byte  *_sendPort, const byte *_receivePort) {
     srcAddr = _srcAddr;
     destAddr = _destAddr;
     srcV6 = _srcV6;

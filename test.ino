@@ -14,7 +14,7 @@
 
     void setup() {
         Serial.begin(19200);
-        if(ENC28J60::customInitialize(sizeof ENC28J60::buffer, srcAddr) == 0) {
+        if(ENC28J60::initialize(sizeof ENC28J60::buffer, srcAddr) == 0) {
             Serial.print("initialization failed");
         } else {
             Serial.print("else");
@@ -23,16 +23,16 @@
     }
 
     void loop() {
-    //    ENC28J60::customSend(srcAddr,destAddr,srcV6,destV6,sendPort,receivePort);
-//        ENC28J60::customSend(false, false, false);
+    //    ENC28J60::send(srcAddr,destAddr,srcV6,destV6,sendPort,receivePort);
+//        ENC28J60::send(false, false, false);
 //        ENC28J60::sendTestFrame();
-        uint32_t pos = ENC28J60::packetLoop(ENC28J60::customReceive());
+        uint32_t pos = ENC28J60::packetLoop(ENC28J60::receive());
 //        ENC28J60::printTempHum();
         if(pos > 0) {
             ENC28J60::process_tcp_request(pos);
             delay(1000);
         }
-//        uint16_t len = ENC28J60::customReceive();
+//        uint16_t len = ENC28J60::receive();
 //        ENC28J60::readPacket(len);
         delay(1000);
     }

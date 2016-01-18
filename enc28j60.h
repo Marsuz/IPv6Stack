@@ -1,17 +1,3 @@
-// Microchip ENC28J60 Ethernet Interface Driver
-// Author: Pascal Stang
-// Modified by: Guido Socher
-// Copyright: GPL V2
-//
-// This driver provides initialization and transmit/receive
-// functions for the Microchip ENC28J60 10Mb Ethernet Controller and PHY.
-// This chip is novel in that it is a full MAC+PHY interface all in a 28-pin
-// chip, using an SPI interface to the host processor.
-//
-// 2010-05-20 <jc@wippler.nl>
-/** @file */
-
-
 #ifndef ENC28J60_H
 #define ENC28J60_H
 
@@ -40,47 +26,20 @@
 #define TCP_SOURCE_PORT1 54
 #define TCP_SOURCE_PORT2 55
 
-/** This class provide low-level interfacing with the ENC28J60 network interface. This is used by the EtherCard class and not intended for use by (normal) end users. */
 class ENC28J60 {
 public:
     static uint8_t buffer[]; //!< Data buffer (shared by recieve and transmit)
     static uint16_t bufferSize; //!< Size of data buffer
-//    static bool broadcast_enabled; //!< True if broadcasts enabled (used to allow temporary disable of broadcast for DHCP or other internal functions)
-//    static bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
-//    static byte frameToSend[];
 
+    static void initSPI (); //Initialize SPI and configure Arduino pins
 
+    static uint8_t initialize(const uint16_t size, const uint8_t* macaddr); //Initialize network interface
 
-//    static uint8_t* tcpOffset () { return buffer + 0x36; } //!< Pointer to the start of TCP payload
-
-    /**   @brief  Initialise SPI interface
-    *     @note   Configures Arduino pins as input / output, etc.
-    */
-    static void initSPI ();
-
-    /**   @brief  Initialise network interface
-    *     @param  size Size of data buffer
-    *     @param  macaddr Pointer to 6 byte hardware (MAC) address
-    *     @param  csPin Arduino pin used for chip select (enable network interface SPI bus). Default = 8
-    *     @return <i>uint8_t</i> ENC28J60 firmware version or zero on failure.
-    */
-    static uint8_t customInitialize(const uint16_t size, const uint8_t* macaddr);
-
-
-    /**   @brief  Sends data to network interface
-    *     @param  len Size of data to send
-    *     @note   Data buffer is shared by recieve and transmit functions
-    */
-    static void customSend (byte* frameToSend, uint16_t size);
+    static void send (byte* frameToSend, uint16_t size); //Sends data to network interface
 
 //    static void sendTestFrame();
 
-    /**   @brief  Copy recieved packets to data buffer
-    *     @return <i>uint16_t</i> Size of recieved data
-    *     @note   Data buffer is shared by recieve and transmit functions
-    */
-
-    static uint16_t customReceive();
+    static uint16_t receive(); //Copy received packets to data buffer
 
     static void seq_plus_payload_to_ack(uint32_t payload, byte *frameToSend);
 
@@ -107,7 +66,7 @@ public:
     static void print_source_ip(byte*packet);
 
     static void createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6,
-                            const byte *destV6, const byte  *sendPort, byte *receivePort);
+                            const byte *destV6, const byte  *sendPort, const byte *receivePort);
 
     static void printTempHum();
 
@@ -116,22 +75,4 @@ public:
 
 typedef ENC28J60 Ethernet; //!< Define alias Ethernet for ENC28J60
 
-
-/** Workaround for Errata 13.
-*   The transmission hardware may drop some packets because it thinks a late collision
-*   occurred (which should never happen if all cable length etc. are ok). If setting
-*   this to 1 these packages will be retried a fixed number of times. Costs about 150bytes
-*   of flash.
-*/
-#define ETHERCARD_RETRY_LATECOLLISIONS 0
-
-/** Enable pipelining of packet transmissions.
-*   If enabled the packetSend function will not block/wait until the packet is actually
-*   transmitted; but instead this wait is shifted to the next time that packetSend is
-*   called. This gives higher performance; however in combination with 
-*   ETHERCARD_RETRY_LATECOLLISIONS this may lead to problems because a packet whose
-*   transmission fails because the ENC-chip thinks that it is a late collision will
-*   not be retried until the next call to packetSend.
-*/
-#define ETHERCARD_SEND_PIPELINING 0
 #endif
