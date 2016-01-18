@@ -235,7 +235,7 @@ static Frame* packet;
 #define TCP_FLAGS_ACK_ONLY 0b00010000
 #define TCP_FLAGS_SYN_ACK 0b00010010
 #define TCP_FLAGS_ACK_FIN 0b00010001
-#define TCP_FLAGS_P 0x42
+#define TCP_FLAGS_P 0x43
 
 
 #define TCP_HEADER_LEN_P 0x3c
@@ -246,6 +246,7 @@ static Frame* packet;
 static Adafruit_HDC1000 hdc = Adafruit_HDC1000();
 static byte Enc28j60Bank;
 static byte selectPin;
+static uint8_t tcp_state;
 
 //SPI initialize
 void ENC28J60::initSPI() {
@@ -509,22 +510,22 @@ void ENC28J60::customSend(byte* frameToSend, uint16_t size) {
 }
 
 void ENC28J60::createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6,
-                           const byte *destV6, const byte  *sendPort, const byte *receivePort) {
+                           const byte *destV6, const byte  *sendPort, byte *receivePort) {
 
     packet = new Frame(srcAddr, destAddr, srcV6, destV6, sendPort, receivePort);
 
 }
 
-void ENC28J60::sendTestFrame() {
-    Serial.print("Sending Test Frame\n");
-    byte data[2];
-    data[0] = 0x01;
-    data[1] = 0x02;
-    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)2);
-    uint16_t size = packet->getSize();
-
-    customSend(frameToSend, size);
-}
+//void ENC28J60::sendTestFrame() {
+//    Serial.print("Sending Test Frame\n");
+//    byte data[2];
+//    data[0] = 0x01;
+//    data[1] = 0x02;
+//    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)2);
+//    uint16_t size = packet->getSize();
+//
+//    customSend(frameToSend, size);
+//}
 
 uint16_t ENC28J60::customReceive() {
     static uint16_t gNextPacketPtr = RXSTART_INIT;
@@ -572,7 +573,7 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
 void ENC28J60::send_tcp_ack() {
     Serial.print("Sending tcp ack\n");
     byte data[0];
-    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0);
+    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0, getPort());
     uint16_t size = packet->getSize();
     frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
 //    uint32_t payload = get_payload();//TODO: 1. Get payload length of packet
@@ -591,13 +592,13 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
 //        gPB[TCP_DST_PORT_L_P] == ((uint8_t) port))
 //    {   //Packet targetted at specified port
 
-    Serial.println("\nIN PACKET LOOP: ");
-    for (int i = 0; i < 154; i++) {
-        if(i%10 == 0 ) Serial.println();
-        Serial.print(buffer[i], HEX);
-        Serial.print(":");
-    }
-    Serial.println("\n----------------------------------------\n");
+//    Serial.println("\nIN PACKET LOOP: ");
+//    for (int i = 0; i < 154; i++) {
+//        if(i%10 == 0 ) Serial.println();
+//        Serial.print(buffer[i], HEX);
+//        Serial.print(":");
+//    }
+//    Serial.println("\n----------------------------------------\n");
 
     if (tcp_state == 1 && (buffer[TCP_FLAGS_P] & TCP_FLAGS_SYN_V)) { //send SYN+ACK
         tcp_state = 2;
@@ -643,11 +644,19 @@ void ENC28J60::seq_plus_payload_to_ack(uint32_t payload, byte *frameToSend) {
     Serial.print("seq_plus_payload_to_ack\n");
     uint32_t seqNum = get_seqnum(58, 61);
     seqNum += payload;
+    Serial.println("\nACK\n");
+    Serial.println(seqNum);
     uint16_t div = 256;
     for(int i = 0; i < 4; i++) {
-        frameToSend[TCP_ACK_P + i] = (byte) seqNum % div;
+        frameToSend[TCP_ACK_P + (3 - i)] = seqNum % div;
         seqNum = seqNum >> 8;
     }
+    Serial.println();
+    for (int i = 0; i < 4; i++) {
+        Serial.print(frameToSend[TCP_ACK_P + i], HEX);
+        Serial.print(":");
+    }
+    Serial.println("\n-----------------------\n");
 }
 
 
@@ -703,6 +712,8 @@ void ENC28J60::print_source_mac(byte *packet) {
         Serial.print(packet[i], HEX);
         if (i != 6) Serial.print(":");
     }
+    Serial.println();
+
 }
 
 void ENC28J60::print_dest_mac(byte *packet) {
@@ -734,9 +745,10 @@ void ENC28J60::printTempHum() {
 }
 
 byte * ENC28J60::getPort() {
-    byte port[2];
+    byte *port = new byte[2];
     port[0] = buffer[TCP_SOURCE_PORT1];
     port[1] = buffer[TCP_SOURCE_PORT2];
+    return port;
 }
 
 

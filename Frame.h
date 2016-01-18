@@ -18,19 +18,19 @@ class Frame {
     const byte *srcV6;
     const byte *destV6;
     const byte *sendPort;
-    const byte *receivePort;
+    byte *receivePort;
     uint16_t size;
     public:
 
-    Frame(const byte *_srcAddr, const byte *_destAddr, const byte *_srcV6,
-          const byte *_destV6, const byte  *_sendPort, const byte *_receivePort);
+    Frame(const byte *_destAddr, const byte *_srcAddr, const byte *_srcV6,
+          const byte *_destV6, const byte  *_sendPort, byte *_receivePort);
     ~Frame();
     const byte* getSrcAddr();
     const byte* getDestAddr();
     const byte* getSrcV6();
     const byte* getDestV6();
     const byte* getSendPort();
-    const byte* getReceivePort();
+    byte* getReceivePort();
     uint16_t getSize();
 
 //    byte* setSrcAddr(byte*);

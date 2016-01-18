@@ -48,7 +48,7 @@ public:
 //    static bool broadcast_enabled; //!< True if broadcasts enabled (used to allow temporary disable of broadcast for DHCP or other internal functions)
 //    static bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
 //    static byte frameToSend[];
-    static uint8_t tcp_state;
+
 
 
 //    static uint8_t* tcpOffset () { return buffer + 0x36; } //!< Pointer to the start of TCP payload
@@ -73,7 +73,7 @@ public:
     */
     static void customSend (byte* frameToSend, uint16_t size);
 
-    static void sendTestFrame();
+//    static void sendTestFrame();
 
     /**   @brief  Copy recieved packets to data buffer
     *     @return <i>uint16_t</i> Size of recieved data
@@ -107,7 +107,7 @@ public:
     static void print_source_ip(byte*packet);
 
     static void createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6,
-                            const byte *destV6, const byte  *sendPort, const byte *receivePort);
+                            const byte *destV6, const byte  *sendPort, byte *receivePort);
 
     static void printTempHum();
 

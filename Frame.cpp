@@ -3,8 +3,8 @@
 //
 #include <Arduino.h>
 #include "Frame.h"
-Frame::Frame(const byte *_srcAddr, const byte *_destAddr, const byte *_srcV6,
-             const byte *_destV6, const byte  *_sendPort, const byte *_receivePort) {
+Frame::Frame(const byte *_destAddr, const byte *_srcAddr, const byte *_srcV6,
+             const byte *_destV6, const byte  *_sendPort, byte *_receivePort) {
     srcAddr = _srcAddr;
     destAddr = _destAddr;
     srcV6 = _srcV6;
@@ -42,7 +42,7 @@ const byte * Frame::getSendPort() {
     return sendPort;
 }
 
-const byte * Frame::getReceivePort() {
+byte * Frame::getReceivePort() {
     return receivePort;
 }
 
@@ -53,7 +53,7 @@ uint16_t Frame::getSize() {
 byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck, const bool ifRes,
                            const bool ifFin, const uint16_t sizeOfData, const byte* destPort) {
 
-    size = 74 + sizeOfData;
+    size = 78 + sizeOfData;
     byte* packet = new byte[size];
 
     static byte frameTemplate[]{
@@ -67,23 +67,24 @@ byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck,
             0x64,
             0x06,
             0x40,
-            //IPv6 addresses
+            //IPv6 addresses 54
             //ports
             0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
             0x00, 0x00, 0x00, 0x00,//Acknowledgment, doesn't matter with SYN (right?)
-            0b01010000,
+            0b01100000,
             0b00000000,
-            0x00, 0xFF,
+            0x05, 0x78  ,
             0x00, 0x00, //checksum
-            0x00, 0x00 //URG not set, so value here doesn't matter
+            0x00, 0x00, //URG not set, so value here doesn't matter
+            0x02, 0x04, 0x05, 0x00
     };
 
     for (int k = 0; k < 6; k++) {
-        packet[k] = srcAddr[k];
+        packet[k] = destAddr[k];
     }
     //destination address
     for (int k = 0; k < 6; k++) {
-        packet[k+6] = destAddr[k];
+        packet[k+6] =  srcAddr[k];
     }
     //ipframe
     for (int k = 0; k < 10; k++) {
@@ -104,26 +105,29 @@ byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck,
     packet[55] = sendPort[1];
     packet[56] = receivePort[0];
     packet[57] = receivePort[1];
+
+    delete []destPort;
+
     //rest of frame
-    for (int k = 0; k < 16; k++) {
+    for (int k = 0; k < 20; k++) {
         packet[k+58] = frameTemplate[k+10];
     }
 
     for(int k = 0; k < size; k++) {
-        packet[k + 74] = data[k];
+        packet[k + 78] = data[k];
     }
 
     if(ifSyn) {
-        packet[64] = packet[64] | (0b00000010);
+        packet[67] = packet[67] | (0b00000010);
     }
     if(ifAck) {
-        packet[64] = packet[64] | (0b00010000);
+        packet[67] = packet[67] | (0b00010000);
     }
     if(ifRes) {
-        packet[64] = 0b00010100;
+        packet[67] = 0b00010100;
     }
     if(ifFin) {
-        packet[64] = 0b00010001;
+        packet[67] = 0b00010001;
     }
 
     return packet;
