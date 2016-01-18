@@ -428,7 +428,8 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
 void ENC28J60::send_tcp_ack() {
     Serial.print("Sending tcp ack\n");
     byte data[0];
-    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0, getPort());
+    packiet->setReceivePort(getPort());
+    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0);
     uint16_t size = packet->getSize();
     frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
 //    uint32_t payload = get_payload();//TODO: 1. Get payload length of packet
@@ -459,7 +460,8 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
         tcp_state = 2;
         Serial.print("Packet Loop If\n");
         byte data[0];
-        byte * frameToSend = packet->getTCPPacket(data, true, true, false, false,(uint16_t) 0, getPort());
+        packet->setReceivePort(getPort());
+        byte * frameToSend = packet->getTCPPacket(data, true, true, false, false,(uint16_t) 0);
         uint16_t size = packet->getSize();
         seq_plus_payload_to_ack((uint32_t)1, frameToSend);
         //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
@@ -480,7 +482,8 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
                     return pos;
             } else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
                 byte data[0];
-                byte *frameToSend = packet->getTCPPacket(data, false, true, false, true,(uint16_t) 0, getPort());
+                packet->setReceivePort(getPort());
+                byte *frameToSend = packet->getTCPPacket(data, false, true, false, true,(uint16_t) 0);
                 uint16_t size = packet->getSize();
                 seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
                 //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_FIN;

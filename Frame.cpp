@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Frame.h"
-Frame::Frame(const byte *_destAddr, const byte *_srcAddr, const byte *_srcV6,
-             const byte *_destV6, const byte  *_sendPort, const byte *_receivePort) {
+Frame::Frame( byte *_destAddr,  byte *_srcAddr,  byte *_srcV6,
+              byte *_destV6,  byte  *_sendPort,  byte *_receivePort) {
     srcAddr = _srcAddr;
     destAddr = _destAddr;
     srcV6 = _srcV6;
@@ -19,23 +19,23 @@ Frame::~Frame() {
     delete[] receivePort;
 }
 
-const byte * Frame::getSrcAddr() {
+byte * Frame::getSrcAddr() {
     return srcAddr;
 }
 
-const byte * Frame::getDestAddr() {
+byte * Frame::getDestAddr() {
     return destAddr;
 }
 
-const byte* Frame::getSrcV6() {
+byte* Frame::getSrcV6() {
     return srcV6;
 }
 
-const byte* Frame::getDestV6() {
+byte* Frame::getDestV6() {
     return destV6;
 }
 
-const byte * Frame::getSendPort() {
+byte * Frame::getSendPort() {
     return sendPort;
 }
 
@@ -47,23 +47,54 @@ uint16_t Frame::getSize() {
     return size;
 }
 
-byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck, const bool ifRes,
-                           const bool ifFin, const uint16_t sizeOfData, const byte* destPort) {
+void Frame::setSrcAddr(byte * addr) {
+    delete[] srcAddr;
+    srcAddr = addr;
+}
+
+void setDestAddr(byte * addr) {
+    delete[] destAddr;
+    destAddr = addr;
+}
+
+void setSrcV6(byte * addr) {
+    delete[] srcV6;
+    srcV6 = addr;
+}
+
+void setDestV6(byte * addr) {
+    delete[] destV6;
+    destV6 = addr;
+}
+
+void setSendPort(byte * port) {
+    delete[] sendPort;
+    sendPort = port;
+}
+
+void setReceivePort(byte * port) {
+    delete[] receivePort;
+    receivePort = port;
+}
+
+byte * Frame::getTCPPacket( byte* data,  bool ifSyn,  bool ifAck,  bool ifRes,
+                            bool ifFin,  uint16_t sizeOfData) {
 
     size = 74 + sizeOfData;
     byte* packet = new byte[size];
 
     static byte frameTemplate[]{
             //MAC addresses
-            0x86, 0xdd,
-            0x60,
-            0x00,
-            0x00,
-            0x01,
-            0x00,
-            0x14,
-            0x06,
-            0x40,
+            0x86,
+            0xdd,
+            0x60, // version +
+            0x00, // traffic class +
+            0x00, //
+            0x01, // flow control
+            0x00, // payload 1st byte
+            0x14, // payload 2nd byte (set to 20 as default = tcp header length with no data)
+            0x06, // next header (06 = tcp header)
+            0x40, // hop limit = 64
             //IPv6 addresses 54
             //ports
             0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
@@ -87,6 +118,14 @@ byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck,
     for (int k = 0; k < 10; k++) {
         packet[k+12] = frameTemplate[k];
     }
+
+    //set payload
+    if(sizeOfData > 0) {
+        uint16_t payload = sizeOfData + 20;
+        packet[18] = (uint8_t) (payload >> 8);
+        packet[19] = (uint8_t) (payload);
+    }
+
     //IPv6 Source Address
     for (int k = 0; k < 16; k++) {
         packet[k+22] = srcV6[k];
@@ -96,14 +135,12 @@ byte * Frame::getTCPPacket(const byte* data, const bool ifSyn, const bool ifAck,
         packet[k+38] = destV6[k];
     }
     //source port
-    receivePort[0] = destPort[0];
-    receivePort[1] = destPort[1];
+    /*receivePort[0] = destPort[0];
+    receivePort[1] = destPort[1];*/
     packet[54] = sendPort[0];
     packet[55] = sendPort[1];
     packet[56] = receivePort[0];
     packet[57] = receivePort[1];
-
-    delete []destPort;
 
     //rest of frame
     for (int k = 0; k < 16; k++) {
