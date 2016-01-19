@@ -9,34 +9,34 @@
 class Frame {
 
     private:
-    byte *srcAddr;
-    byte *destAddr;
-    byte *srcV6;
-    byte *destV6;
-    byte *sendPort;
+    const byte *srcAddr;
+    const byte *destAddr;
+    const byte *srcV6;
+    const byte *destV6;
+    const byte *sendPort;
     byte *receivePort;
     uint16_t size;
     public:
 
-    Frame( byte *_destAddr,  byte *_srcAddr,  byte *_srcV6,
-           byte *_destV6,  byte  *_sendPort, byte *_receivePort);
+    Frame( const byte *_destAddr, const byte *_srcAddr, const byte *_srcV6,
+           const byte *_destV6, const byte  *_sendPort, byte *_receivePort);
     ~Frame();
-    byte* getSrcAddr();
-    byte* getDestAddr();
-    byte* getSrcV6();
-    byte* getDestV6();
-    byte* getSendPort();
+    const byte* getSrcAddr();
+    const byte* getDestAddr();
+    const byte* getSrcV6();
+    const byte* getDestV6();
+    const byte* getSendPort();
     byte* getReceivePort();
-    void setSrcAddr(byte * addr);
-    void setDestAddr(byte * addr);
-    void setSrcV6(byte * addr);
-    void setDestV6(byte * addr);
-    void setSendPort(byte * port);
+//    void setSrcAddr(byte * addr);
+//    void setDestAddr(byte * addr);
+//    void setSrcV6(byte * addr);
+//    void setDestV6(byte * addr);
+//    void setSendPort(byte * port);
     void setReceivePort(byte * port);
     uint16_t getSize();
 
-    byte* getTCPPacket( byte* data,   bool ifSyn,   bool ifAck,
-                         bool ifRes,  bool ifFinm,  uint16_t sizeOfData);
+    byte* getTCPPacket( byte* data,  const bool ifSyn,  const bool ifAck,
+                        const bool ifRes, const bool ifFinm, const uint16_t sizeOfData);
 
 
 };

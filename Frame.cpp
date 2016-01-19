@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Frame.h"
-Frame::Frame( byte *_destAddr,  byte *_srcAddr,  byte *_srcV6,
-              byte *_destV6,  byte  *_sendPort,  byte *_receivePort) {
+Frame::Frame(const byte *_destAddr, const  byte *_srcAddr, const  byte *_srcV6,
+             const byte *_destV6, const byte  *_sendPort, byte *_receivePort) {
     srcAddr = _srcAddr;
     destAddr = _destAddr;
     srcV6 = _srcV6;
@@ -19,23 +19,23 @@ Frame::~Frame() {
     delete[] receivePort;
 }
 
-byte * Frame::getSrcAddr() {
+const byte * Frame::getSrcAddr() {
     return srcAddr;
 }
 
-byte * Frame::getDestAddr() {
+const byte * Frame::getDestAddr() {
     return destAddr;
 }
 
-byte* Frame::getSrcV6() {
+const  byte* Frame::getSrcV6() {
     return srcV6;
 }
 
-byte* Frame::getDestV6() {
+const byte* Frame::getDestV6() {
     return destV6;
 }
 
-byte * Frame::getSendPort() {
+const  byte * Frame::getSendPort() {
     return sendPort;
 }
 
@@ -46,39 +46,39 @@ byte * Frame::getReceivePort() {
 uint16_t Frame::getSize() {
     return size;
 }
-
-void Frame::setSrcAddr(byte * addr) {
-    delete[] srcAddr;
-    srcAddr = addr;
-}
-
-void Frame::setDestAddr(byte * addr) {
-    delete[] destAddr;
-    destAddr = addr;
-}
-
-void Frame::setSrcV6(byte * addr) {
-    delete[] srcV6;
-    srcV6 = addr;
-}
-
-void Frame::setDestV6(byte * addr) {
-    delete[] destV6;
-    destV6 = addr;
-}
-
-void Frame::setSendPort(byte * port) {
-    delete[] sendPort;
-    sendPort = port;
-}
+//
+//void Frame::setSrcAddr(byte * addr) {
+//    delete[] srcAddr;
+//    srcAddr = addr;
+//}
+//
+//void Frame::setDestAddr(byte * addr) {
+//    delete[] destAddr;
+//    destAddr = addr;
+//}
+//
+//void Frame::setSrcV6(byte * addr) {
+//    delete[] srcV6;
+//    srcV6 = addr;
+//}
+//
+//void Frame::setDestV6(byte * addr) {
+//    delete[] destV6;
+//    destV6 = addr;
+//}
+//
+//void Frame::setSendPort(byte * port) {
+//    delete[] sendPort;
+//    sendPort = port;
+//}
 
 void Frame::setReceivePort(byte * port) {
     delete[] receivePort;
     receivePort = port;
 }
 
-byte * Frame::getTCPPacket( byte* data,  bool ifSyn,  bool ifAck,  bool ifRes,
-                            bool ifFin,  uint16_t sizeOfData) {
+byte * Frame::getTCPPacket( byte* data, const bool ifSyn, const bool ifAck, const bool ifRes,
+                            const bool ifFin,  const uint16_t sizeOfData) {
 
     size = 74 + sizeOfData;
     byte* packet = new byte[size];
@@ -163,6 +163,17 @@ byte * Frame::getTCPPacket( byte* data,  bool ifSyn,  bool ifAck,  bool ifRes,
     if(ifFin) {
         packet[67] = 0b00010001;
     }
+
+
+    Serial.println("SIZE: " + size);
+    Serial.println("\nIN PACKET LOOP: ");
+    for (int i = 0; i < 154; i++) {
+        if(i%10 == 0 ) Serial.println();
+        Serial.print(packet[i]);
+        Serial.print(":");
+    }
+    Serial.println("\n----------------------------------------\n");
+
     return packet;
 
 }
