@@ -65,8 +65,8 @@ public:
 
     static void print_source_ip(byte*packet);
 
-    static void createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6,
-                            const byte *destV6, const byte  *sendPort, const byte *receivePort);
+    static void createFrame( byte *srcAddr,  byte *destAddr,  byte *srcV6,
+                             byte *destV6,  byte  *sendPort,  byte *receivePort);
 
     static void printTempHum();
 

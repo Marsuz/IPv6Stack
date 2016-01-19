@@ -35,13 +35,6 @@ class Frame {
     void setReceivePort(byte * port);
     uint16_t getSize();
 
-//    byte* setSrcAddr(byte*);
-//    byte* setDestAddr(byte*);
-//    byte* setSrcV6(byte*);
-//    byte* setDestV6(byte*);
-//    byte* setSendPort(byte*);
-//    byte* setReceivePort(byte*);
-
     byte* getTCPPacket( byte* data,   bool ifSyn,   bool ifAck,
                          bool ifRes,  bool ifFinm,  uint16_t sizeOfData);
 

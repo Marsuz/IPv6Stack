@@ -364,8 +364,8 @@ void ENC28J60::send(byte *frameToSend, uint16_t size) {
         delete [] frameToSend;
 }
 
-void ENC28J60::createFrame(const byte *srcAddr, const byte *destAddr, const byte *srcV6,
-                           const byte *destV6, const byte  *sendPort, const byte *receivePort) {
+void ENC28J60::createFrame(byte *srcAddr, byte *destAddr, byte *srcV6,
+                           byte *destV6, byte  *sendPort, byte *receivePort) {
 
     packet = new Frame(srcAddr, destAddr, srcV6, destV6, sendPort, receivePort);
 
@@ -428,7 +428,7 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
 void ENC28J60::send_tcp_ack() {
     Serial.print("Sending tcp ack\n");
     byte data[0];
-    packiet->setReceivePort(getPort());
+    packet->setReceivePort(getPort());
     byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0);
     uint16_t size = packet->getSize();
     frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;

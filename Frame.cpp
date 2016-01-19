@@ -52,27 +52,27 @@ void Frame::setSrcAddr(byte * addr) {
     srcAddr = addr;
 }
 
-void setDestAddr(byte * addr) {
+void Frame::setDestAddr(byte * addr) {
     delete[] destAddr;
     destAddr = addr;
 }
 
-void setSrcV6(byte * addr) {
+void Frame::setSrcV6(byte * addr) {
     delete[] srcV6;
     srcV6 = addr;
 }
 
-void setDestV6(byte * addr) {
+void Frame::setDestV6(byte * addr) {
     delete[] destV6;
     destV6 = addr;
 }
 
-void setSendPort(byte * port) {
+void Frame::setSendPort(byte * port) {
     delete[] sendPort;
     sendPort = port;
 }
 
-void setReceivePort(byte * port) {
+void Frame::setReceivePort(byte * port) {
     delete[] receivePort;
     receivePort = port;
 }
@@ -163,7 +163,13 @@ byte * Frame::getTCPPacket( byte* data,  bool ifSyn,  bool ifAck,  bool ifRes,
     if(ifFin) {
         packet[67] = 0b00010001;
     }
-
+    Serial.println("\nIN PACKET LOOP: ");
+    for (int i = 0; i < 100; i++) {
+        if(i%10 == 0 ) Serial.println();
+        Serial.print(packet[i], HEX);
+        Serial.print(":");
+    }
+    Serial.println("\n----------------------------------------\n");
     return packet;
 
 }
