@@ -432,7 +432,7 @@ void ENC28J60::send_tcp_ack() {
     byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0);
     uint16_t size = packet->getSize();
     frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
-//    uint32_t payload = get_payload();//TODO: 1. Get payload length of packet
+    uint32_t payload = get_payload();
     uint32_t payload = 0;
     seq_plus_payload_to_ack(payload, frameToSend);
     add_to_seqnum((uint32_t)0, frameToSend);
@@ -607,6 +607,18 @@ byte * ENC28J60::getPort() {
     port[0] = buffer[TCP_SOURCE_PORT1];
     port[1] = buffer[TCP_SOURCE_PORT2];
     return port;
+}
+
+uint32_t get_payload() {
+
+    byte payload[2];
+    payload[0] = buffer[18];
+    payload[1] = buffer[19];
+
+    uint32_t result = (uint32_t) (payload[0] << 16);
+    result += (uint32_t) (payload[1]);
+
+    return result;
 }
 
 
