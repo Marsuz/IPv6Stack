@@ -163,13 +163,6 @@ byte * Frame::getTCPPacket( byte* data,  bool ifSyn,  bool ifAck,  bool ifRes,
     if(ifFin) {
         packet[67] = 0b00010001;
     }
-    Serial.println("\nIN PACKET LOOP: ");
-    for (int i = 0; i < 100; i++) {
-        if(i%10 == 0 ) Serial.println();
-        Serial.print(packet[i], HEX);
-        Serial.print(":");
-    }
-    Serial.println("\n----------------------------------------\n");
     return packet;
 
 }
