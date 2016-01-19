@@ -464,19 +464,21 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
 //        Serial.print(":");
 //    }
 //    Serial.println("\n----------------------------------------\n");
-
+    uint16_t size;
+    byte *frameToSend;
     switch (tcp_state) {
 
         case 1 :
+            Serial.println("1");
             if(buffer[TCP_FLAGS_P] & TCP_FLAGS_SYN_V) { //send SYN+ACK
                 tcp_state = 2;
                 Serial.print("Packet Loop If\n");
                 byte data[0];
                 packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
-                byte * frameToSend = packet->getTCPPacket(data, true, true, false, false,(uint16_t) 0);
+                frameToSend = packet->getTCPPacket(data, true, true, false, false,(uint16_t) 0);
 
 
-                uint16_t size = packet->getSize();
+                size = packet->getSize();
                 seq_plus_payload_to_ack((uint32_t)1, frameToSend);
                 //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
 
@@ -485,6 +487,7 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
             break;
 
         case 2:
+            Serial.println("2");
             if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {   //This is an acknowledgement to our SYN+ACK so let's start processing that payload
                 Serial.println("Packet Loop else if\n");
                 uint16_t info_data_len = 0;
@@ -511,15 +514,17 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
             break;
 
         case 3:
+            Serial.println("3");
             tcp_state = 4;
             byte data[0];
-            byte *frameToSend = packet->getTCPPacket(data, false, false , false, true, 0); // sending fin packet
-            uint16_t size = packet->getSize();
+            frameToSend = packet->getTCPPacket(data, false, false , false, true, 0); // sending fin packet
+            size = packet->getSize();
             seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
             send(frameToSend, size);
             break;
 
         case 4:
+            Serial.println("4");
 
             if(buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {
                 tcp_state = 5;
@@ -527,16 +532,21 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
             break;
 
         case 5:
+            Serial.println("5");
 
             if(buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
                 tcp_state = 1;
                 byte data[0];
                 packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
-                byte *frameToSend = packet->getTCPPacket(data, false, true , false, false, 0); // sending ack packet after fin
-                uint16_t size = packet->getSize();
+                frameToSend = packet->getTCPPacket(data, false, true , false, false, 0); // sending ack packet after fin
+                size = packet->getSize();
                 seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
                 send(frameToSend, size);
             }
+
+//            if (plen > 0) {
+//                send_tcp_ack();
+//            }
             break;
 
         default: {}
@@ -591,7 +601,8 @@ void ENC28J60::add_to_seqnum(uint32_t number, byte *frameToSend) {
     Serial.println("SEQ NUM: ");
     Serial.print(number);
 
-    seq += number;
+    seq+=number;
+
     uint16_t oct = 256;
 
     for(int i = 0; i < 4; i++) {
@@ -662,8 +673,8 @@ uint32_t ENC28J60::get_payload() {
 }
 
 void ENC28J60::http_post() {
-    int temperature = static_cast<int>(hdc.readTemperature());
-    int humidity = static_cast<int>(hdc.readHumidity());
+    byte temperature = (byte) (static_cast<int>(hdc.readTemperature()));
+    byte humidity = (byte) (static_cast<int>(hdc.readHumidity()));
 
     Serial.println("\nSending http post\n");
 //    byte data[] = "HTTP/1.1 200 OK\r\nServer: Apache/1.3.19 (Unix)\r\nAccept-Ranges: bytes\r\nContent-Length: 48\r\nKeep-Alive: timeout=15, max=100\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
@@ -672,15 +683,27 @@ void ENC28J60::http_post() {
 //    for(int i = 1; i <= sizeof(int); i++) {
 //        data[(sizeof(data)-11)-i] = temp[sizeof(i+nt)-i];
 //    }
+
+//    byte temp1 = temperature % 10;
+//    temperature = temperature >> 1;
+//    byte temp2 = temperature %10;
+
+    Serial.println("TEMP: ");
+    Serial.print(temperature);
+    Serial.println();
+
     data[sizeof(data)-12] = humidity;
-    data[sizeof(data)-14] = temperature;
+    data[sizeof(data)-13] = (temperature+48);
+//    data[sizeof(data)-12] = (temp1+48);
+//    data[sizeof(data)-13] = (temp2+48);
     packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
     byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)(sizeof data));
     uint16_t size = packet->getSize();
     uint32_t payload = get_payload() ;
     seq_plus_payload_to_ack(payload,frameToSend);
+//    add_to_seqnum((uint16_t)(sizeof data),frameToSend);
     send(frameToSend, size);
-    //add_to_seqnum((uint16_t)(sizeof data),frameToSend);
+//    seq += (uint16_t)(sizeof data);
 }
 
 
