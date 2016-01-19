@@ -13,12 +13,9 @@
     byte ENC28J60::buffer[500]; // tcp/ip send and receive buffer
 
     void setup() {
+        Serial.println("steup");
         Serial.begin(19200);
-        if(ENC28J60::initialize(sizeof ENC28J60::buffer, srcAddr) == 0) {
-            Serial.print("initialization failed");
-        } else {
-            Serial.print("else");
-        }
+        ENC28J60::initialize(sizeof ENC28J60::buffer, srcAddr);
         ENC28J60::createFrame(destAddr, srcAddr,srcV6,destV6,sendPort,receivePort);
     }
 

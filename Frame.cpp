@@ -97,7 +97,7 @@ byte * Frame::getTCPPacket( byte* data, const bool ifSyn, const bool ifAck, cons
             0x40, // hop limit = 64
             //IPv6 addresses 54
             //ports
-            0x00, 0x00, 0x00, 0x02,//Sequence number, theoretically random
+            0x00, 0x00, 0x00, 0x00,//Sequence number, theoretically random
             0x00, 0x00, 0x00, 0x00,//Acknowledgment, doesn't matter with SYN (right?)
             0b01010000,
             0b00000000,

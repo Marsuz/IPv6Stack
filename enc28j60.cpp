@@ -320,14 +320,14 @@ uint8_t ENC28J60::initialize(uint16_t size, const uint8_t *macaddr) {
     writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE | EIE_PKTIE);
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 
-    byte rev = readRegByte(EREVID);
-    // microchip forgot to step the number on the silcon when they
-    // released the revision B7. 6 is now rev B7. We still have
-    // to see what they do when they release B8. At the moment
-    // there is no B8 out yet
-    if (rev > 5) ++rev;
-    return rev;
-
+//    byte rev = readRegByte(EREVID);
+//    // microchip forgot to step the number on the silcon when they
+//    // released the revision B7. 6 is now rev B7. We still have
+//    // to see what they do when they release B8. At the moment
+//    // there is no B8 out yet
+//    if (rev > 5) ++rev;
+//    return rev;
+    return 0;
 }
 
 
@@ -438,7 +438,7 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
 }
 
 void ENC28J60::send_tcp_ack() {
-//    Serial.print("Sending tcp ack\n");
+    Serial.println("SENDING TCP ACK\n");
     byte data[0];
     packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
     byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)0);
@@ -490,6 +490,8 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
             if (info_data_len > 0) {   //Got some data0
                 uint16_t pos = ((uint16_t) TCP_SRC_PORT_H_P +
                                 (buffer[TCP_HEADER_LEN_P] >> 4) * 4); // start of data field in TCP frame
+                Serial.println("POS: ");
+                Serial.print(pos);
                 if (pos <= plen)
                     return pos;
             } else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
@@ -558,17 +560,9 @@ void ENC28J60::add_to_seqnum(uint32_t number, byte *frameToSend) {
     uint16_t oct = 256;
 
     for(int i = 0; i < 4; i++) {
-        frameToSend[TCP_SEQ_P+i] = ((byte)((seq >> (8*i)) % oct));
+        frameToSend[TCP_SEQ_P + (3 - i)] = ((byte)((seq >> (8*i)) % oct));
     }
 
-    //    Serial.println("SIZE: " + size);
-    Serial.println("\nIN PACKET LOOP: ");
-    for (int i = 0; i < 80; i++) {
-        if(i%10 == 0 ) Serial.println();
-        Serial.print(frameToSend[i], HEX);
-        Serial.print(":");
-    }
-    Serial.println("\n----------------------------------------\n");
 }
 
 void ENC28J60::readPacket(uint16_t len) {
@@ -634,17 +628,15 @@ uint32_t ENC28J60::get_payload() {
 
 void ENC28J60::http_post() {
     Serial.println("\nSending http post\n");
-    byte data[] = "POST / HTTP/1.1 200 OK\r\nServer: Apache/1.3.19 (Unix)\r\nAccept-Ranges: bytes\r\nContent-Length: 48\r\nKeep-Alive: timeout=15, max=100\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
-//    byte data[] = "a";
+//    byte data[] = "HTTP/1.1 200 OK\r\nServer: Apache/1.3.19 (Unix)\r\nAccept-Ranges: bytes\r\nContent-Length: 48\r\nKeep-Alive: timeout=15, max=100\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
+    byte data[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
     packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
-    byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)(sizeof(data)/ sizeof(*data)));
+    byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)(sizeof data));
     uint16_t size = packet->getSize();
-//    frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
-    //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
     uint32_t payload = get_payload() ;
     seq_plus_payload_to_ack(payload,frameToSend);
-    add_to_seqnum((uint16_t)((sizeof data)/ (sizeof *data)),frameToSend);
     send(frameToSend, size);
+    //add_to_seqnum((uint16_t)(sizeof data),frameToSend);
 }
 
 
