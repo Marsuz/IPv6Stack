@@ -498,8 +498,13 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
                     uint16_t pos = ((uint16_t) TCP_SRC_PORT_H_P +
                                     (buffer[TCP_HEADER_LEN_P] >> 4) * 4); // start of data field in TCP frame
                     if (pos <= plen) {
-                        tcp_state = 3;
-                        return pos;
+                        tcp_state = 6;
+                        byte data[0];
+                        packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
+                        frameToSend = packet->getTCPPacket(data, false, true, false, false,(uint16_t) 0);
+                        size = packet->getSize();
+                        seq_plus_payload_to_ack((uint32_t)1, frameToSend);
+                        send(frameToSend, size);
                     }
                 } /*else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
                     byte data[0];
@@ -540,13 +545,46 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
                 packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
                 frameToSend = packet->getTCPPacket(data, false, true , false, false, 0); // sending ack packet after fin
                 size = packet->getSize();
-                seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
+                seq_plus_payload_to_ack((uint32_t) 2, frameToSend);
                 send(frameToSend, size);
             }
 
 //            if (plen > 0) {
 //                send_tcp_ack();
 //            }
+            break;
+
+        case 6:
+            Serial.println("2");
+            if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {   //This is an acknowledgement to our SYN+ACK so let's start processing that payload
+                Serial.println("Packet Loop else if\n");
+                uint16_t info_data_len = 0;
+                info_data_len = buffer[IP_PAYLOAD_LEN_H] << 8;
+                info_data_len += buffer[IP_PAYLOAD_LEN_L];
+
+                if (info_data_len > 0) {   //Got some data0
+                    uint16_t pos = ((uint16_t) TCP_SRC_PORT_H_P +
+                                    (buffer[TCP_HEADER_LEN_P] >> 4) * 4); // start of data field in TCP frame
+                    if (pos <= plen) {
+                        tcp_state = 3;
+                        byte data[0];
+                        packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
+                        frameToSend = packet->getTCPPacket(data, false, true, false, false,(uint16_t) 0);
+                        size = packet->getSize();
+                        seq_plus_payload_to_ack((uint32_t)1, frameToSend);
+                        send(frameToSend, size);
+                        return pos;
+                    }
+                } /*else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
+                    byte data[0];
+                    packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
+                    byte *frameToSend = packet->getTCPPacket(data, false, true, false, true, (uint16_t) 0);
+                    uint16_t size = packet->getSize();
+                    seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
+                    send(frameToSend, size);
+                    tcp_state = 1;
+                }*/
+            }
             break;
 
         default: {}
@@ -601,8 +639,7 @@ void ENC28J60::add_to_seqnum(uint32_t number, byte *frameToSend) {
     Serial.println("SEQ NUM: ");
     Serial.print(number);
 
-    seq+=number;
-
+    seq += number;
     uint16_t oct = 256;
 
     for(int i = 0; i < 4; i++) {
