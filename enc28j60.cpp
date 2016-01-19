@@ -465,48 +465,83 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
 //    }
 //    Serial.println("\n----------------------------------------\n");
 
-    if (tcp_state == 1 && (buffer[TCP_FLAGS_P] & TCP_FLAGS_SYN_V)) { //send SYN+ACK
-        tcp_state = 2;
-        Serial.print("Packet Loop If\n");
-        byte data[0];
-        packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
-        byte * frameToSend = packet->getTCPPacket(data, true, true, false, false,(uint16_t) 0);
+    switch (tcp_state) {
 
-
-        uint16_t size = packet->getSize();
-        seq_plus_payload_to_ack((uint32_t)1, frameToSend);
-        //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
-
-
-        send(frameToSend, size);
-    } else if(tcp_state == 2) {
-        if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {   //This is an acknowledgement to our SYN+ACK so let's start processing that payload
-            tcp_state = 3;
-            Serial.println("Packet Loop else if\n");
-            uint16_t info_data_len = 0;
-            info_data_len = buffer[IP_PAYLOAD_LEN_H] << 8;
-            info_data_len += buffer[IP_PAYLOAD_LEN_L];
-
-            if (info_data_len > 0) {   //Got some data0
-                uint16_t pos = ((uint16_t) TCP_SRC_PORT_H_P +
-                                (buffer[TCP_HEADER_LEN_P] >> 4) * 4); // start of data field in TCP frame
-                Serial.println("POS: ");
-                Serial.print(pos);
-                if (pos <= plen)
-                    return pos;
-            } else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
+        case 1 :
+            if(buffer[TCP_FLAGS_P] & TCP_FLAGS_SYN_V) { //send SYN+ACK
+                tcp_state = 2;
+                Serial.print("Packet Loop If\n");
                 byte data[0];
                 packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
-                byte *frameToSend = packet->getTCPPacket(data, false, true, false, true,(uint16_t) 0);
+                byte * frameToSend = packet->getTCPPacket(data, true, true, false, false,(uint16_t) 0);
+
+
+                uint16_t size = packet->getSize();
+                seq_plus_payload_to_ack((uint32_t)1, frameToSend);
+                //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
+
+                send(frameToSend, size);
+            }
+            break;
+
+        case 2:
+            if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {   //This is an acknowledgement to our SYN+ACK so let's start processing that payload
+                Serial.println("Packet Loop else if\n");
+                uint16_t info_data_len = 0;
+                info_data_len = buffer[IP_PAYLOAD_LEN_H] << 8;
+                info_data_len += buffer[IP_PAYLOAD_LEN_L];
+
+                if (info_data_len > 0) {   //Got some data0
+                    uint16_t pos = ((uint16_t) TCP_SRC_PORT_H_P +
+                                    (buffer[TCP_HEADER_LEN_P] >> 4) * 4); // start of data field in TCP frame
+                    if (pos <= plen) {
+                        tcp_state = 3;
+                        return pos;
+                    }
+                } /*else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
+                    byte data[0];
+                    packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
+                    byte *frameToSend = packet->getTCPPacket(data, false, true, false, true, (uint16_t) 0);
+                    uint16_t size = packet->getSize();
+                    seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
+                    send(frameToSend, size);
+                    tcp_state = 1;
+                }*/
+            }
+            break;
+
+        case 3:
+            tcp_state = 4;
+            byte data[0];
+            byte *frameToSend = packet->getTCPPacket(data, false, false , false, true, 0); // sending fin packet
+            uint16_t size = packet->getSize();
+            seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
+            send(frameToSend, size);
+            break;
+
+        case 4:
+
+            if(buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_ONLY) {
+                tcp_state = 5;
+            }
+            break;
+
+        case 5:
+
+            if(buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
+                tcp_state = 1;
+                byte data[0];
+                packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
+                byte *frameToSend = packet->getTCPPacket(data, false, true , false, false, 0); // sending ack packet after fin
                 uint16_t size = packet->getSize();
                 seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
                 send(frameToSend, size);
-                tcp_state = 1;
             }
-        }
-        // send RST TCP packet
-    }
+            break;
 
+        default: {}
+
+    }
     return 0;
 
 }
