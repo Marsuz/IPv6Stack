@@ -440,7 +440,7 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
 void ENC28J60::send_tcp_ack() {
     Serial.print("Sending tcp ack\n");
     byte data[0];
-    packet->setReceivePort(getPort());
+    packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
     byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0);
     uint16_t size = packet->getSize();
     uint32_t payload = get_payload();//TODO: 1. Get payload length of packet
@@ -469,7 +469,7 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
         tcp_state = 2;
         Serial.print("Packet Loop If\n");
         byte data[0];
-        packet->setReceivePort(getPort());
+        packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
         byte * frameToSend = packet->getTCPPacket(data, true, true, false, false,(uint16_t) 0);
 
 
@@ -496,7 +496,7 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
                     return pos;
             } else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
                 byte data[0];
-                packet->setReceivePort(getPort());
+                packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
                 byte *frameToSend = packet->getTCPPacket(data, false, true, false, true,(uint16_t) 0);
                 uint16_t size = packet->getSize();
                 seq_plus_payload_to_ack((uint32_t) 1, frameToSend);
@@ -610,12 +610,6 @@ void ENC28J60::printTempHum() {
 
 }
 
-byte * ENC28J60::getPort() {
-    byte *port = new byte[2];
-    port[0] = buffer[TCP_SOURCE_PORT1];
-    port[1] = buffer[TCP_SOURCE_PORT2];
-    return port;
-}
 
 uint32_t ENC28J60::get_payload() {
     byte payload[2];
@@ -633,10 +627,11 @@ void ENC28J60::http_post() {
     Serial.println("\nSending http post\n");
     byte data[] = "HTTP/1.1 200 OK\r\nServer: Apache/1.3.19 (Unix)\r\nAccept-Ranges: bytes\r\nContent-Length: 48\r\nKeep-Alive: timeout=15, max=100\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
 //    byte data[] = "a";
-    packet->setReceivePort(getPort());
+    packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
     byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)(sizeof(data)/ sizeof(*data)));
     uint16_t size = packet->getSize();
 //    frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
+    //frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
     uint32_t payload = get_payload() ;
     seq_plus_payload_to_ack(payload,frameToSend);
     add_to_seqnum((uint16_t)((sizeof data)/ (sizeof *data)),frameToSend);

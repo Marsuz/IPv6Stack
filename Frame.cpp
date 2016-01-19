@@ -72,9 +72,9 @@ uint16_t Frame::getSize() {
 //    sendPort = port;
 //}
 
-void Frame::setReceivePort(byte * port) {
-    delete[] receivePort;
-    receivePort = port;
+void Frame::setReceivePort(byte a, byte b) {
+    receivePort[0] = a;
+    receivePort[1] = b;
 }
 
 byte * Frame::getTCPPacket( byte* data, const bool ifSyn, const bool ifAck, const bool ifRes,
