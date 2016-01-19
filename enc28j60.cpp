@@ -662,9 +662,18 @@ uint32_t ENC28J60::get_payload() {
 }
 
 void ENC28J60::http_post() {
+    int temperature = static_cast<int>(hdc.readTemperature());
+    int humidity = static_cast<int>(hdc.readHumidity());
+
     Serial.println("\nSending http post\n");
 //    byte data[] = "HTTP/1.1 200 OK\r\nServer: Apache/1.3.19 (Unix)\r\nAccept-Ranges: bytes\r\nContent-Length: 48\r\nKeep-Alive: timeout=15, max=100\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
-    byte data[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
+    byte data[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html>X X</html>\r\n\r\n";
+//    byte temp[sizeof(int)] = static_cast<byte*>(static_cast<void*>(&temperature));
+//    for(int i = 1; i <= sizeof(int); i++) {
+//        data[(sizeof(data)-11)-i] = temp[sizeof(i+nt)-i];
+//    }
+    data[sizeof(data)-12] = humidity;
+    data[sizeof(data)-14] = temperature;
     packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
     byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)(sizeof data));
     uint16_t size = packet->getSize();
