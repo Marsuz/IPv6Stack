@@ -396,7 +396,7 @@ uint16_t ENC28J60::receive() {
     static uint16_t gNextPacketPtr = RXSTART_INIT;
     uint16_t len = 0;
     if (readRegByte(EPKTCNT) > 0) {
-        Serial.print("received packet");
+//        Serial.print("received packet");
         writeReg(ERDPT, gNextPacketPtr);
 
         struct {
@@ -438,10 +438,10 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
 }
 
 void ENC28J60::send_tcp_ack() {
-    Serial.print("Sending tcp ack\n");
+//    Serial.print("Sending tcp ack\n");
     byte data[0];
     packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
-    byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0);
+    byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)0);
     uint16_t size = packet->getSize();
     uint32_t payload = get_payload();//TODO: 1. Get payload length of packet
     //uint32_t payload = 0;
@@ -488,10 +488,8 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
             info_data_len += buffer[IP_PAYLOAD_LEN_L];
 
             if (info_data_len > 0) {   //Got some data0
-                Serial.println("GOT SOME DATA\n");
                 uint16_t pos = ((uint16_t) TCP_SRC_PORT_H_P +
                                 (buffer[TCP_HEADER_LEN_P] >> 4) * 4); // start of data field in TCP frame
-                Serial.println("POS: \n" + pos);
                 if (pos <= plen)
                     return pos;
             } else if (buffer[TCP_FLAGS_P] & TCP_FLAGS_ACK_FIN || buffer[TCP_FLAGS_P] & TCP_FLAGS_FIN_V) {
@@ -512,11 +510,11 @@ uint32_t ENC28J60::packetLoop(uint16_t plen) {
 }
 
 void ENC28J60::seq_plus_payload_to_ack(uint32_t payload, byte *frameToSend) {
-    Serial.print("seq_plus_payload_to_ack\n");
+//    Serial.print("seq_plus_payload_to_ack\n");
     uint32_t seqNum = get_seqnum(58, 61);
     seqNum += payload;
-    Serial.println("\nACK\n");
-    Serial.println(seqNum);
+//    Serial.println("\nACK\n");
+//    Serial.println(seqNum);
     uint16_t div = 256;
     for(int i = 0; i < 4; i++) {
         frameToSend[TCP_ACK_P + (3 - i)] = seqNum % div;
@@ -543,7 +541,7 @@ uint16_t ENC28J60::calc_checksum(byte *frameToSend, uint8_t off, uint16_t len) {
 }
 
 uint32_t ENC28J60::get_seqnum(int lbound, int ubound) {
-    Serial.print("get_sqgnum\n");
+//    Serial.print("get_sqgnum\n");
     uint32_t result = 0;
     for (int i = lbound; i <= ubound; i++) {
         result = result << 8;
@@ -553,13 +551,24 @@ uint32_t ENC28J60::get_seqnum(int lbound, int ubound) {
 };
 
 void ENC28J60::add_to_seqnum(uint32_t number, byte *frameToSend) {
-    Serial.print("add_to_seqnum\n");
+    Serial.println("SEQ NUM: ");
+    Serial.print(number);
+
     seq += number;
     uint16_t oct = 256;
 
     for(int i = 0; i < 4; i++) {
         frameToSend[TCP_SEQ_P+i] = ((byte)((seq >> (8*i)) % oct));
     }
+
+    //    Serial.println("SIZE: " + size);
+    Serial.println("\nIN PACKET LOOP: ");
+    for (int i = 0; i < 80; i++) {
+        if(i%10 == 0 ) Serial.println();
+        Serial.print(frameToSend[i], HEX);
+        Serial.print(":");
+    }
+    Serial.println("\n----------------------------------------\n");
 }
 
 void ENC28J60::readPacket(uint16_t len) {
@@ -625,7 +634,7 @@ uint32_t ENC28J60::get_payload() {
 
 void ENC28J60::http_post() {
     Serial.println("\nSending http post\n");
-    byte data[] = "HTTP/1.1 200 OK\r\nServer: Apache/1.3.19 (Unix)\r\nAccept-Ranges: bytes\r\nContent-Length: 48\r\nKeep-Alive: timeout=15, max=100\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
+    byte data[] = "POST / HTTP/1.1 200 OK\r\nServer: Apache/1.3.19 (Unix)\r\nAccept-Ranges: bytes\r\nContent-Length: 48\r\nKeep-Alive: timeout=15, max=100\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\n\r\n<html></html>\r\n\r\n";
 //    byte data[] = "a";
     packet->setReceivePort(buffer[TCP_SOURCE_PORT1], buffer[TCP_SOURCE_PORT2]);
     byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)(sizeof(data)/ sizeof(*data)));
@@ -635,7 +644,7 @@ void ENC28J60::http_post() {
     uint32_t payload = get_payload() ;
     seq_plus_payload_to_ack(payload,frameToSend);
     add_to_seqnum((uint16_t)((sizeof data)/ (sizeof *data)),frameToSend);
-    send(frameToSend, sizeof data);
+    send(frameToSend, size);
 }
 
 

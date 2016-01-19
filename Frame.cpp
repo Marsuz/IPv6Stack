@@ -165,15 +165,6 @@ byte * Frame::getTCPPacket( byte* data, const bool ifSyn, const bool ifAck, cons
     }
 
 
-    Serial.println("SIZE: " + size);
-    Serial.println("\nIN PACKET LOOP: ");
-    for (int i = 0; i < 154; i++) {
-        if(i%10 == 0 ) Serial.println();
-        Serial.print(packet[i]);
-        Serial.print(":");
-    }
-    Serial.println("\n----------------------------------------\n");
-
     return packet;
 
 }

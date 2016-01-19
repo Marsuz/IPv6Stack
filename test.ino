@@ -30,6 +30,7 @@
 //        ENC28J60::printTempHum();
         if(pos > 0) {
             ENC28J60::process_tcp_request(pos);
+            Serial.print("POS WAS GT 0");
             delay(1000);
         }
 //        uint16_t len = ENC28J60::receive();
