@@ -111,6 +111,7 @@ static Frame* packet;
 
 // max frame length which the controller will accept:
 // (note: maximum ethernet frame length would be 1518)
+
 #define MAX_FRAMELEN      1500
 
 #define IP_PAYLOAD_LEN_H 0x12
@@ -122,7 +123,6 @@ static Frame* packet;
 #define TCP_FLAGS_SYN_ACK 0b00010010
 #define TCP_FLAGS_ACK_FIN 0b00010001
 #define TCP_FLAGS_P 0x43
-
 
 #define TCP_HEADER_LEN_P 0x3c
 #define TCP_SRC_PORT_H_P 0x38
@@ -417,6 +417,7 @@ void ENC28J60::process_tcp_request(uint32_t pos) {
     send_tcp_ack();
     char* data = (char *) buffer + pos;
     if (strncmp("GET / ", data, 6) == 0) {// nothing specified
+        http_post();
 //        prepare_data();//TODO: prepare data to send via HTTP
         Serial.print("Processing tcp request\n");
     } else {
@@ -432,7 +433,7 @@ void ENC28J60::send_tcp_ack() {
     byte * frameToSend = packet->getTCPPacket(data, true, false, false, false, (uint16_t)0);
     uint16_t size = packet->getSize();
     frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
-    uint32_t payload = get_payload();
+//    uint32_t payload = get_payload();
     uint32_t payload = 0;
     seq_plus_payload_to_ack(payload, frameToSend);
     add_to_seqnum((uint32_t)0, frameToSend);
@@ -441,8 +442,6 @@ void ENC28J60::send_tcp_ack() {
 }
 
 uint32_t ENC28J60::packetLoop(uint16_t plen) {
-
-
 
 //    if (gPB[TCP_DST_PORT_H_P] == (port >> 8) && TODO: check if ports are consistent
 //        gPB[TCP_DST_PORT_L_P] == ((uint8_t) port))
@@ -609,8 +608,7 @@ byte * ENC28J60::getPort() {
     return port;
 }
 
-uint32_t get_payload() {
-
+uint32_t ENC28J60::get_payload() {
     byte payload[2];
     payload[0] = buffer[18];
     payload[1] = buffer[19];
@@ -620,5 +618,18 @@ uint32_t get_payload() {
 
     return result;
 }
+
+void ENC28J60::http_post() {
+    Serial.print("Sending http post\n");
+    byte data[] = "HTTP/1.1 200 OK\r\nDate: Sat, 25 May 2002 21:10:32 GTM\r\nServer: Apache/1.3.19 (Unix)\r\nLast-Modified: Sat, 28 May 2002 20:51:33 GTM\r\nAccept-Ranges: bytes\r\nContent-Length: 48\r\nKeep-Alive: timeout=15, max=100\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Hello</h1></body></html>\r\n\r\n";
+    packet->setReceivePort(getPort());
+    byte * frameToSend = packet->getTCPPacket(data, false, true, false, false, (uint16_t)(sizeof(data)/ sizeof(*data)));
+    uint16_t size = packet->getSize();
+    frameToSend[TCP_FLAGS_P] = TCP_FLAGS_ACK_ONLY;
+    uint32_t payload = get_payload() ;
+    seq_plus_payload_to_ack(payload,frameToSend);
+    add_to_seqnum((uint16_t)(sizeof(data)/ sizeof(*data)),frameToSend);
+}
+
 
 

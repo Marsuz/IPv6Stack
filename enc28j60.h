@@ -71,6 +71,10 @@ public:
     static void printTempHum();
 
     static byte* getPort();
+
+    static void http_post();
+
+    static uint32_t get_payload();
 };
 
 typedef ENC28J60 Ethernet; //!< Define alias Ethernet for ENC28J60
